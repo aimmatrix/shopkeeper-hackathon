@@ -26,6 +26,18 @@ const POSES: Record<Mood, Pose> = {
   paused:   { a: [-0.02, 0.12, 0, 0, 0, 0],    sx: 1.12, sy: 0.66, dy: 4.5, ex: 0,    ey: 3.2,  eye: 0.12, bob: 0,   breathe: 0.5, spin: 0,   sway: 0 },
   error:    { a: [0, 0, 0.15, 0, 0, 0],        sx: 1,    sy: 1,    dy: 0.5, ex: -0.4, ey: 2.2,  eye: 0.85, bob: 0,   breathe: 0,   spin: 0,   sway: 0 },
 };
+/** A bot's resting shape, like the different bot faces in GrokBot's sidebar. Any mood other than idle takes over while it lasts. */
+export type Shape = 'blob' | 'circle' | 'pill' | 'hexagon' | 'triangle' | 'cloud';
+const SHAPES: Record<Shape, Pose> = {
+  blob: POSES.idle,
+  circle: { ...POSES.idle, a: [0, 0, 0, 0, 0, 0], sx: 1, sy: 1 },
+  pill: { ...POSES.idle, a: [0, 0.16, 0, 0.06, 0, 0], sx: 1.14, sy: 0.78 },
+  hexagon: { ...POSES.idle, a: [0, 0, 0, 0, 0, 0.055], sx: 1.02, sy: 1 },
+  triangle: { ...POSES.idle, a: [0, 0, 0.15, 0, 0, 0], ey: 2.2 },
+  cloud: { ...POSES.idle, a: [-0.03, 0.04, 0, 0, 0, 0.075], sx: 1.1, sy: 0.9 },
+};
+const poseFor = (mood: Mood, shape: Shape) => mood === 'idle' ? SHAPES[shape] : POSES[mood];
+
 // Fixed phase per harmonic: k=1 weights the bottom, k=3 points a corner up, k=4 puts corners on the diagonals, k=5 puts a petal on top.
 const PHASE = [Math.PI / 2, 0, Math.PI / 2, Math.PI, -Math.PI / 2, 0];
 const R = 13, CX = 20, CY = 21, POINTS = 40;
@@ -70,15 +82,17 @@ const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia('
  * (round when idle, a churning cloud when thinking, a bouncing pill when typing, a triangle on errors…).
  * `still` draws the shape without motion; reduced-motion users always get the still version.
  */
-export function BotAvatar({ mood = 'idle', size = 28, color = '#F8C642', still = false, inline = false, className }: {
-  mood?: Mood; size?: number; color?: string; still?: boolean; inline?: boolean; className?: string;
+export function BotAvatar({ mood = 'idle', shape = 'blob', size = 28, color = '#F8C642', still = false, inline = false, className }: {
+  mood?: Mood; shape?: Shape; size?: number; color?: string; still?: boolean; inline?: boolean; className?: string;
 }) {
   const svg = useRef<SVGSVGElement>(null);
   const moodRef = useRef(mood);
+  const shapeRef = useRef(shape);
   const changedAt = useRef(0);
-  const initial = useMemo(() => draw(POSES[mood], 0, 0, 0, 1, mood), []); // eslint-disable-line react-hooks/exhaustive-deps
+  const initial = useMemo(() => draw(poseFor(mood, shape), 0, 0, 0, 1, mood), []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { moodRef.current = mood; changedAt.current = performance.now(); }, [mood]);
+  useEffect(() => { shapeRef.current = shape; }, [shape]);
 
   useEffect(() => {
     const el = svg.current;
@@ -90,16 +104,16 @@ export function BotAvatar({ mood = 'idle', size = 28, color = '#F8C642', still =
       f.eyes.forEach((e, i) => { eyes[i].setAttribute('cx', e.cx); eyes[i].setAttribute('cy', e.cy); eyes[i].setAttribute('ry', e.ry); });
     };
     if (still || reducedMotion()) {
-      paint(draw(POSES[mood], 0, 0, 0, 1, mood));
+      paint(draw(poseFor(mood, shape), 0, 0, 0, 1, mood));
       return;
     }
-    const cur = copy(POSES[moodRef.current]);
+    const cur = copy(poseFor(moodRef.current, shapeRef.current));
     const offset = Math.random() * 10; // desynchronise avatars that share a mood
     let frame = 0, last = performance.now(), spun = 0, nextBlink = last + 1500 + Math.random() * 3000, visible = true;
     const tick = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      const target = POSES[moodRef.current];
+      const target = poseFor(moodRef.current, shapeRef.current);
       const ease = 1 - Math.exp(-dt * 9);
       cur.a = cur.a.map((v, i) => v + (target.a[i] - v) * ease);
       for (const k of KEYS) cur[k] += (target[k] - cur[k]) * ease;
@@ -126,10 +140,10 @@ export function BotAvatar({ mood = 'idle', size = 28, color = '#F8C642', still =
     if (!(still || reducedMotion())) return;
     const el = svg.current;
     if (!el) return;
-    const f = draw(POSES[mood], 0, 0, 0, 1, mood);
+    const f = draw(poseFor(mood, shape), 0, 0, 0, 1, mood);
     el.querySelector('path')!.setAttribute('d', f.d);
     el.querySelectorAll('ellipse').forEach((e, i) => { e.setAttribute('cx', f.eyes[i].cx); e.setAttribute('cy', f.eyes[i].cy); e.setAttribute('ry', f.eyes[i].ry); });
-  }, [mood, still]);
+  }, [mood, shape, still]);
 
   return <svg ref={svg} className={[s.avatar, inline && s.inline, className].filter(Boolean).join(' ')} width={size} height={size} viewBox="0 0 40 40" aria-hidden="true">
     <g transform={initial.rotate}>

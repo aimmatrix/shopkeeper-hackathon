@@ -1,0 +1,131 @@
+/* GrokBot desktop look. Colours sampled from the GrokBot app; see components/dashboard/inbox.module.css for the same palette. */
+.window{display:grid;grid-template-columns:290px minmax(0,1fr);height:calc(100vh - 220px);min-height:580px;max-height:900px;border-radius:16px;overflow:hidden;background:#070707;color:#FAFAFA;box-shadow:0 18px 40px -18px rgba(15,15,15,.45);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:-.005em}
+.window button:focus-visible{outline:2px solid #F8C642;outline-offset:2px}
+.pane{position:relative;display:flex;min-width:0;min-height:0}
+
+/* Sidebar */
+.sidebar{display:flex;flex-direction:column;gap:4px;min-width:0;padding:14px 10px;background:#111;border-right:1px solid #1E1E1E;overflow-y:auto}
+.lights{display:flex;gap:8px;padding:2px 8px}
+.lights i{width:12px;height:12px;border-radius:50%;background:#FF5F57}
+.lights i:nth-child(2){background:#FEBC2E}
+.lights i:nth-child(3){background:#28C840}
+.workspace{display:flex;justify-content:space-between;margin:26px 10px 6px;font-size:14px;color:#9D9D9D}
+.section{display:flex;flex-direction:column;gap:2px;margin-top:14px}
+.section h3{margin:0 10px 6px;font-size:14px;font-weight:400;letter-spacing:0;color:#9D9D9D}
+.item{position:relative;display:flex;align-items:center;gap:12px;width:100%;padding:9px 10px;border:0;border-radius:14px;background:none;text-align:left;transition:background .2s}
+button.item:hover{background:#1C1C1C}
+.item.active{background:#313131}
+.item.locked{opacity:.4}
+.itemText{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.itemTop{display:flex;align-items:center;gap:8px;min-width:0}
+.itemTop strong{font-size:15.5px;font-weight:600;color:#FEFEFE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.preview{font-size:14px;color:#9E9E9E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tag{flex-shrink:0;display:inline-block;padding:2px 6px;border-radius:5px;background:#232323;color:#A0A0A0;font-size:11.5px;font-weight:500;line-height:1.3;letter-spacing:0}
+.active .tag{background:#3D3D3D;color:#A7A6A7}
+.unread{position:relative;flex-shrink:0;width:9px;height:9px;border-radius:50%;background:#48A1FF}
+.unread::after{content:"";position:absolute;inset:0;border-radius:50%;background:#48A1FF;animation:ping 1.2s ease-out infinite}
+@keyframes ping{to{transform:scale(2.6);opacity:0}}
+.sideFooter{margin:auto 10px 4px;padding-top:18px;font-size:12px;line-height:1.5;color:#7A7A7A}
+
+/* Faces */
+.person{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:50%;color:#E6E6E6;font-weight:600;letter-spacing:0}
+.stackFace{position:relative;display:inline-block;flex-shrink:0}
+.pairPerson{position:absolute;left:0;top:0}
+.pairBot{position:absolute;right:-3px;bottom:-3px}
+.group0,.group1,.group2{position:absolute}
+.group0{left:-2px;bottom:0}
+.group1{right:-2px;bottom:2px}
+.group2{left:22%;top:-4px}
+
+/* Chat */
+.chat{position:relative;display:flex;flex-direction:column;flex:1;min-width:0;min-height:0;animation:chatIn .42s cubic-bezier(.2,.8,.2,1)}
+@keyframes chatIn{from{opacity:0;transform:translateX(28px)}}
+.head{position:absolute;inset:0 0 auto;z-index:1;display:flex;justify-content:center;padding:12px 16px 22px;background:linear-gradient(#070707 55%,rgba(7,7,7,0));pointer-events:none}
+.pill{display:flex;align-items:center;gap:8px;max-width:100%;height:38px;padding:0 12px 0 6px;border-radius:999px;background:#181818;border:1px solid #262626}
+.pill h2{margin:0;font-size:15px;font-weight:500;letter-spacing:0;color:#FEFEFE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.log{flex:1 1 0;min-height:0;overflow-y:auto;padding:72px 22px 18px;display:flex;flex-direction:column;gap:12px;scrollbar-color:#333 transparent}
+.footer{padding:8px 18px 16px}
+
+/* Messages */
+.msg{display:flex;align-items:flex-end;gap:8px;max-width:min(88%,700px);animation:msgIn .28s ease-out}
+@keyframes msgIn{from{opacity:0;transform:translateY(6px)}}
+.in{align-self:flex-start}
+.out{align-self:flex-end;flex-direction:row-reverse}
+.face{flex-shrink:0;width:28px;height:28px}
+.stack{display:flex;flex-direction:column;gap:6px;min-width:0}
+.stack.wide{width:min(100%,560px)}
+.out .stack{align-items:flex-end}
+.author{display:flex;align-items:center;gap:6px;padding:0 4px;font-size:12.5px;color:#9E9E9E}
+.bubble{padding:9px 14px;border-radius:18px;background:#262626;font-size:15px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}
+.out .bubble{background:#2F2F2F}
+.dots{display:flex;align-items:center;padding:12px 16px;color:#9E9E9E}
+.note{align-self:center;margin:6px 0;padding:4px 12px;border-radius:999px;background:#121212;border:1px solid #1E1E1E;font-size:12.5px;color:#8A8A8A;animation:msgIn .28s ease-out}
+
+/* Buttons and status */
+.primary{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:38px;padding:0 18px;border:0;border-radius:999px;background:#FAFAFA;color:#0A0A0A;font-size:14.5px;font-weight:600;white-space:nowrap}
+.primary:hover:not(:disabled){background:#E6E6E6}
+.primary:disabled{background:#3D3D3D;color:#8A8A8A;cursor:not-allowed}
+.status{display:flex;align-items:center;gap:12px;min-height:50px;padding:6px 7px 6px 20px;border-radius:999px;background:#2F2F2F;border:1px solid rgba(255,255,255,.08);font-size:14.5px;color:#9E9E9E}
+.status>span{flex:1;min-width:0}
+
+/* Cards */
+.card{display:flex;flex-direction:column;gap:12px;padding:14px 16px;border-radius:16px;background:#141414;border:1px solid #2A2A2A;transition:opacity .3s}
+.card.done{opacity:.72}
+.cardFoot{display:flex;align-items:center;justify-content:flex-end;gap:12px}
+.cardFoot small{margin-right:auto;font-size:12.5px;color:#9E9E9E}
+.sent{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;font-weight:500;color:#4ADE80}
+.mailHead{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0;padding-bottom:10px;border-bottom:1px solid #242424;font-size:13.5px}
+.mailHead dt{color:#8A8A8A}
+.mailHead dd{margin:0;color:#EDEDED;overflow-wrap:anywhere}
+.mailBody{margin:0;font-size:14px;line-height:1.55;color:#D4D4D4;white-space:pre-wrap}
+.invoiceHead{display:flex;justify-content:space-between;gap:12px;font-size:14px}
+.invoiceHead span{color:#9E9E9E}
+.lines{display:flex;flex-direction:column;gap:6px;margin:0;font-size:14px}
+.lines>div{display:flex;justify-content:space-between;gap:12px}
+.lines dt{color:#B5B5B5}
+.lines dd{margin:0;font-variant-numeric:tabular-nums}
+.total{padding-top:8px;border-top:1px solid #242424;font-weight:600}
+.total dt{color:#FAFAFA}
+
+.choices{display:flex;flex-direction:column;gap:8px}
+.choice{display:flex;align-items:center;gap:14px;width:100%;padding:12px 14px;border-radius:14px;background:#141414;border:1px solid #2A2A2A;text-align:left;transition:border-color .2s,background .2s}
+.choice:hover:not(:disabled){background:#1A1A1A;border-color:#3A3A3A}
+.choice:disabled{cursor:default;opacity:.4}
+.choice.picked:disabled{opacity:1}
+.choice.picked{border-color:#F8C642;background:#1A1712}
+.choiceText{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.choiceText strong{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600}
+.choiceText span{font-size:13px;color:#9E9E9E}
+.choiceText small{font-size:12.5px;color:#7A7A7A}
+.good{background:rgba(248,198,66,.14);color:#F8C642}
+.price{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.check{width:20px;height:20px;flex-shrink:0;border-radius:50%;border:1.5px solid #444}
+.picked .check{border-color:#F8C642;background:#F8C642 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23111' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/12px no-repeat}
+
+/* Broadcast */
+.recipients{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px;margin:0;padding:10px;list-style:none;border-radius:16px;background:#141414;border:1px solid #2A2A2A}
+.recipients li{position:relative;display:flex;align-items:center;gap:10px;min-width:0;padding:6px 8px;border-radius:10px}
+.rName{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rState{font-size:12px;color:#7A7A7A}
+.isSent .rState{animation:fadeIn .3s calc(var(--i) * 90ms) both}
+.isSent .rState .sent{font-size:12px}
+.reaction{position:absolute;left:28px;top:0;font-size:15px;line-height:1;animation:pop .45s cubic-bezier(.3,1.6,.5,1) calc(900ms + var(--i) * 160ms) both}
+@keyframes fadeIn{from{opacity:0}}
+@keyframes pop{from{opacity:0;transform:scale(.2) translateY(6px)}}
+.reactionBar{display:flex;flex-wrap:wrap;gap:6px;padding:0 4px}
+.reactionBar>span{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 9px;border-radius:999px;background:#1C1C1C;border:1px solid #2A2A2A;font-size:13px;color:#D4D4D4;animation:pop .45s cubic-bezier(.3,1.6,.5,1) calc(900ms + var(--i) * 160ms) both}
+
+@media(prefers-reduced-motion:reduce){.chat,.msg,.note,.isSent .rState,.reaction,.reactionBar>span{animation:none}.unread::after{animation:none}}
+
+/* Phones: the chat list becomes a strip of faces above the open chat. */
+@media(max-width:800px){
+  .window{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);height:calc(100dvh - 170px)}
+  .sidebar{flex-direction:row;align-items:center;gap:6px;padding:10px;border-right:0;border-bottom:1px solid #1E1E1E;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+  .lights,.workspace,.section h3,.preview,.sideFooter,.itemTop .tag{display:none}
+  .section{flex-direction:row;margin:0}
+  .item{width:auto;padding:6px 10px 6px 6px;border-radius:999px}
+  .itemTop strong{font-size:14px}
+  .log{padding:64px 14px 14px}
+  .msg{max-width:94%}
+  .footer{padding:8px 12px 12px}
+}
