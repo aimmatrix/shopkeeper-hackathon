@@ -1,69 +1,106 @@
 import { useEffect, useRef, useState } from 'react';
 import { money } from '@/lib/types';
 import type { Message } from '@/lib/types';
-import { Arrow, type Dash, clock, plural, shortDate, unitName, variantLabel } from './shared';
+import { Arrow, type Dash, plural, shortDate, unitName } from './shared';
 import { arrival, openPurchase } from './today';
+import s from './inbox.module.css';
 
 const CUSTOMER = 'Alex Morgan';
+const ASSISTANT = 'Shopkeeper Sales Assistant';
 const TRY_IT = 'Could I get two hoodies?';
-const who = (m: Message) => m.sender === 'customer' ? CUSTOMER : m.sender === 'sales' ? 'Sales assistant' : m.sender === 'stock' ? 'Stock manager' : 'You';
+/** The header names the sales assistant, so only other shop-side senders get a name above their bubble. */
+const LABEL: Partial<Record<Message['sender'], string>> = { stock: 'Stock manager', merchant: 'You' };
+const side = (sender: Message['sender']) => sender === 'customer' ? 'user' : 'bot';
+
+/** GrokBot-style bot avatar: a soft blob with two eyes, in Shopkeeper yellow. */
+function Blob({ size }: { size: number }) {
+  return <svg className={s.blob} width={size} height={size} viewBox="0 0 40 40" aria-hidden="true">
+    <path d="M20.6 4.5c8.4 0 14.9 5.9 14.9 14.2 0 9.2-6.7 16.8-16 16.8-8.4 0-15-5.9-15-14.1C4.5 12.2 11.6 4.5 20.6 4.5Z" fill="#F8C642" />
+    <ellipse cx="21.5" cy="19" rx="1.5" ry="2.6" fill="#141414" />
+    <ellipse cx="27.5" cy="18.4" rx="1.5" ry="2.6" fill="#141414" />
+  </svg>;
+}
+
+function Bubble({ sender, text, turn }: { sender: Message['sender']; text: string; turn: boolean }) {
+  return <div className={[s.msg, s[side(sender)], turn && s.turn].filter(Boolean).join(' ')}>
+    {LABEL[sender] && <span className={s.label}>{LABEL[sender]}</span>}
+    <span className={s.bubble}>{text}</span>
+  </div>;
+}
 
 export function InboxView(d: Dash) {
   const { state, product, busy, needRestock, incoming } = d;
   const [text, setText] = useState('');
+  // The customer's message shows immediately while the reply is on its way.
+  const [pending, setPending] = useState<string | null>(null);
   const feed = useRef<HTMLDivElement>(null);
   const messages = state.messages;
   const last = messages[messages.length - 1];
+  const preview = pending ?? last?.text;
   const sent = messages.filter(m => m.sender === 'customer').length > 1;
   const orders = state.orders.filter(o => o.customer === CUSTOMER && o.productId === product.id);
-  const held = orders.filter(o => o.status === 'reserved').reduce((s, o) => s + o.quantity, 0);
+  const held = orders.filter(o => o.status === 'reserved').reduce((n, o) => n + o.quantity, 0);
   // The deterministic sales reply states the shortfall ("We’re 1 short of your request").
   const shortMatch = [...messages].reverse().find(m => m.sender === 'sales' && /(\d+) short of your request/.test(m.text))?.text.match(/(\d+) short of your request/);
   const short = shortMatch ? Number(shortMatch[1]) : 0;
   const open = openPurchase(d);
 
-  useEffect(() => { const el = feed.current; if (el) el.scrollTop = el.scrollHeight; }, [messages.length]);
+  useEffect(() => { const el = feed.current; if (el) el.scrollTop = el.scrollHeight; }, [messages.length, pending]);
 
   async function send(body: string) {
-    if (!body.trim()) return;
-    if (await d.act({ type: 'customer_message', text: body, eventId: crypto.randomUUID() })) setText('');
+    if (!body.trim() || pending !== null) return;
+    const typed = text;
+    setPending(body);
+    if (body === typed) setText('');
+    const ok = await d.act({ type: 'customer_message', text: body, eventId: crypto.randomUUID() });
+    setPending(null);
+    if (!ok && body === typed) setText(typed);
   }
 
-  return <div className="sk-inbox">
+  return <div className={s.inbox}>
     <h1 className="sr-only">Inbox</h1>
-    <section className="sk-card sk-convos">
-      <div className="sk-convos-head"><h2>Conversations</h2><span>{messages.length ? '1 OPEN' : '0 OPEN'}</span></div>
-      {last ? <div className="sk-convo" aria-current="true">
-        <span className="sk-avatar">AM</span>
-        <span className="sk-convo-text">
-          <span><strong>{CUSTOMER}</strong><time dateTime={last.at}>{clock(last.at)}</time></span>
-          <small>Web chat · demo</small>
-          <span className="sk-convo-preview">{last.text}</span>
-        </span>
-      </div> : <p className="sk-empty">No customer messages yet.</p>}
-    </section>
+    <div className={s.window}>
+      <section className={s.sidebar} aria-labelledby="sk-convos-title">
+        <div className={s.lights} aria-hidden="true"><i /><i /><i /></div>
+        <div className={s.section}><h2 id="sk-convos-title">Conversations</h2><span>{preview ? 1 : 0}</span></div>
+        {preview ? <div className={s.item} aria-current="true">
+          <span className={s.pair} aria-hidden="true"><span className={s.letter}>A</span><Blob size={24} /></span>
+          <span className={s.itemText}>
+            <span className={s.itemTop}><strong>{CUSTOMER}</strong><span className={s.tag}>Web chat</span></span>
+            <span className={s.preview}>{preview}</span>
+          </span>
+        </div> : <p className={s.none}>No conversations yet.</p>}
+      </section>
 
-    <section className="sk-card sk-chat">
-      <div className="sk-chat-head">
-        <div><strong>{CUSTOMER}</strong><span>Asking about {product.name} · {variantLabel(product)}</span></div>
-        <span className="sk-chip grey">GUIDED DEMO REPLIES</span>
-      </div>
-      <div className="sk-chat-feed" ref={feed}>
-        {messages.length === 0 && <p className="sk-empty">No customer messages yet.</p>}
-        {messages.map(m => <div key={m.id} className={`sk-msg ${m.sender === 'customer' ? 'in' : 'out'}`}>
-          <span className="sk-msg-who">{who(m)}</span>
-          <span className="sk-msg-bubble">{m.text}</span>
-        </div>)}
-      </div>
-      <div className="sk-compose">
-        {!sent && <button className="sk-try" disabled={busy || state.paused} onClick={() => send(TRY_IT)}>Try it: “{TRY_IT}”</button>}
-        <form onSubmit={e => { e.preventDefault(); void send(text); }}>
-          <label htmlFor="sk-reply" className="sr-only">Message as the customer</label>
-          <input id="sk-reply" type="text" value={text} onChange={e => setText(e.target.value)} maxLength={2000} placeholder={state.paused ? 'Workflow paused. Resume it from the store menu.' : 'Write as the customer…'} disabled={busy || state.paused} />
-          <button aria-label="Send message" disabled={busy || state.paused || !text.trim()}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z" /><path d="M22 2 11 13" /></svg></button>
-        </form>
-      </div>
-    </section>
+      <section className={s.chat} aria-label="Customer chat">
+        <header className={s.head}>
+          <div className={s.pill}><Blob size={26} /><h2>{ASSISTANT}</h2><span className={s.tag}>Guided demo</span></div>
+        </header>
+        <div className={s.feed} ref={feed} role="log" aria-label="Messages">
+          {messages.length === 0 && pending === null && <div className={s.empty}>
+            <Blob size={56} />
+            <strong>{ASSISTANT}</strong>
+            <span>Answers questions about sizes, stock and reservations. Replies are a guided demo.</span>
+          </div>}
+          {messages.map((m, i) => <Bubble key={m.id} sender={m.sender} text={m.text} turn={i > 0 && side(messages[i - 1].sender) !== side(m.sender)} />)}
+          {pending !== null && <>
+            <Bubble sender="customer" text={pending} turn={!!last && side(last.sender) !== 'user'} />
+            <div className={`${s.msg} ${s.bot} ${s.turn}`} role="status">
+              <span className="sr-only">The sales assistant is replying</span>
+              <span className={`${s.bubble} ${s.typing}`} aria-hidden="true"><i /><i /><i /></span>
+            </div>
+          </>}
+        </div>
+        <div className={s.compose}>
+          {!sent && pending === null && <button className={s.try} disabled={busy || state.paused} onClick={() => send(TRY_IT)}>Try it: “{TRY_IT}”</button>}
+          <form className={s.bar} onSubmit={e => { e.preventDefault(); void send(text); }}>
+            <label htmlFor="sk-reply" className="sr-only">Message as the customer</label>
+            <input id="sk-reply" type="text" value={text} onChange={e => setText(e.target.value)} maxLength={2000} placeholder={state.paused ? 'Workflow paused. Resume it from the store menu.' : 'Message as Alex Morgan…'} disabled={busy || state.paused} />
+            <button className={s.send} aria-label="Send message" disabled={busy || state.paused || !text.trim()}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 19V5" /><path d="m5 12 7-7 7 7" /></svg></button>
+          </form>
+        </div>
+      </section>
+    </div>
 
     <aside className="sk-inbox-side">
       <section className="sk-card sk-changed">
