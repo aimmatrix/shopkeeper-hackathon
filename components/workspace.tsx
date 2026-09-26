@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Montserrat } from 'next/font/google';
 import type { Action, ShopState } from '@/lib/types';
 import { available } from '@/lib/types';
 import { Mark, type Dash, type View } from './dashboard/shared';
@@ -10,7 +9,6 @@ import { StockView } from './dashboard/stock';
 import { Restock } from './dashboard/restock';
 import { InboxView } from './dashboard/inbox';
 
-const montserrat = Montserrat({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800', '900'], variable: '--sk-font', display: 'swap' });
 
 type Connections = { database: string; tavily: boolean; grok: boolean; mode: string };
 const nav: { id: View; label: string }[] = [{ id: 'today', label: 'Today' }, { id: 'inbox', label: 'Inbox' }, { id: 'stock', label: 'Stock' }, { id: 'suppliers', label: 'Suppliers' }];
@@ -115,7 +113,7 @@ export default function Workspace() {
     applyReport: () => { if (state.agentReport) { setSelected(state.agentReport.quoteId); setQuantity(state.agentReport.quantity); } },
   } : null;
 
-  return <div className={`sk ${montserrat.variable}`}>
+  return <div className="sk">
     <div className="sk-strip"><b>DEMO STORE</b><span>Sample catalogue and suppliers. No real payments, no supplier is contacted.</span></div>
 
     <header className="sk-header">

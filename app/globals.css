@@ -1,17 +1,16 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;450;500;550;600;650;700;750;800&family=Urbanist:wght@400;500;550;600;650;700;750;800&display=swap');
-:root{--paper:#f7f8f3;--surface:#fffffc;--ink:#24291f;--muted:#7a8074;--line:#e5e8dd;--lime:#d7ed9e;--green:#526645;--soft-green:#ecf1e4;--amber:#a17036;--font-body:'Manrope',sans-serif;--font-display:'Urbanist',sans-serif}
+:root{--sk-ink:#0F0F0F;--sk-accent:#F8C642;--sk-cream:#F6F1E7;--sk-coral:#F86868;--sk-red:#A61B1B;--sk-red-2:#C0392B;--sk-alarm:#E04848;--sk-muted:#475467;--sk-soft:#A3A3A3;--sk-grey:#5C5C5C;--sk-line:#EFEFEF;--sk-chip:#F0F0F0;--sk-font-stack:var(--sk-font),'Montserrat',system-ui,sans-serif;--paper:var(--sk-cream);--surface:#fff;--ink:var(--sk-ink);--muted:var(--sk-muted);--line:#E8E8E8;--lime:var(--sk-accent);--green:var(--sk-ink);--soft-green:#FBF3DC;--amber:#8A5A00;--font-body:var(--sk-font-stack);--font-display:var(--sk-font-stack)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-body);font-size:13px;-webkit-font-smoothing:antialiased}
 button,input{font:inherit}
 button{cursor:pointer;color:inherit}
 button:disabled{opacity:.5;cursor:not-allowed}
 button,a,input{outline-offset:4px}
-button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid #657946}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--sk-ink)}
 button{transition:background .18s,transform .18s}
 button:active:not(:disabled){transform:translateY(1px)}
 a{color:inherit}
 h1,h2,h3,p{margin:0}
-h1,h2,h3{font-family:var(--font-display);font-weight:600}
+h1,h2,h3{font-family:var(--font-display);font-weight:800;letter-spacing:-.02em}
 button svg{flex-shrink:0}
 button{border:0;background:none}
 strong{font-weight:650}
@@ -21,44 +20,46 @@ small{font-size:11px}
 .spin{animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 main{padding:35px 38px 0;max-width:1640px;margin:auto}
-.eyebrow{font-size:8px;font-weight:650;letter-spacing:1.75px;color:#939b87;margin-bottom:10px;display:flex;align-items:center;gap:7px}
 h1{font-size:35px;letter-spacing:-1.2px;line-height:1.15}
-.button{min-height:39px;border-radius:6px;display:inline-flex;justify-content:center;align-items:center;gap:9px;padding:10px 15px;font-size:11px;font-weight:600;white-space:nowrap}
-.button.dark{background:#2f3828;color:#f3f5e9;box-shadow:0 2px 3px #25301c10}
-.button.dark:hover{background:#46553a}
-.button.dark svg:last-child{margin-left:10px}
-.button.outline{border:1px solid #d7decc;background:#fafbf5;color:#526245}
-.button.outline:hover,.button.subtle:hover{background:#e8eddc}
-.button.subtle{background:#eef1e6;border:1px solid #e0e5d6;color:#5c6c4a}
-.product-table{border-collapse:collapse;width:100%;text-align:left;font-size:10px;white-space:nowrap}
-.product-table th{font-size:8px;font-weight:500;color:#929a86;background:#f2f5ec;padding:11px 12px}
-.product-table th:first-child{padding-left:23px}
-.product-table td{padding:14px 12px;border-top:1px solid #e9ecdf}
-.product-table td:first-child{padding-left:23px}
-@media(min-width:1550px){main{padding:44px 50px 0}.product-table{font-size:12px}.product-table th{font-size:10px}.product-table td{padding-top:18px;padding-bottom:18px}}
-@media(max-width:1250px){main{padding:28px 25px 0}.product-table th,.product-table td{padding-inline:8px}.product-table th:first-child,.product-table td:first-child{padding-left:17px}}
-@media(max-width:1080px){.eyebrow{font-size:7px}}
-@media(max-width:760px){main{padding:27px 19px 0}.product-table td,.product-table th{padding-inline:10px}}
+@media(min-width:1550px){main{padding:44px 50px 0}}
+@media(max-width:1250px){main{padding:28px 25px 0}}
+@media(max-width:760px){main{padding:27px 19px 0}}
 @media(max-width:440px){main{padding-inline:14px}}
-.agent-workspace{max-width:1000px;padding:40px 28px 60px}
-.agent-workspace>a{color:#5b7343;font-size:12px}
-.agent-workspace h1{font-size:36px;max-width:650px}
-.agent-instructions{font-size:13px;line-height:1.8;color:#68745c;max-width:780px;margin:20px 0}
-.agent-workspace h2{font-size:23px;margin:30px 0 16px}
-.agent-workspace .product-table{background:#fbfcf7;border:1px solid var(--line);white-space:normal;font-size:12px}
-.agent-workspace .product-table th{font-size:11px}
-.agent-report-form{max-width:700px}
-.agent-report-form label{display:flex;flex-direction:column;gap:9px;font-size:12px;color:#67795a;margin-bottom:19px}
-.agent-report-form textarea,.agent-report-form input,.agent-report-form select{background:#fffffa;border:1px solid #d9e0cf;border-radius:5px;padding:12px;font:12px/1.6 var(--font-body);color:var(--ink)}
-.agent-report-form textarea{min-height:100px;resize:vertical}
-.agent-form-row{display:flex;gap:20px}
-.agent-form-row label{flex:1}
-.agent-status{padding:15px 0;font-size:12px;color:#657c4a}
-@media(max-width:760px){.agent-form-row{flex-direction:column;gap:0}.agent-workspace{padding:28px 18px}.agent-workspace h1{font-size:30px}.agent-workspace .product-table{font-size:10px}}
+/* /agent: GrokBot handoff page, built on the .sk dashboard primitives below */
+.agent-page .sk-brand{text-decoration:none}
+.agent-page .sk-header{flex-wrap:nowrap}
+.sk-main.agent-main{max-width:1120px}
+.agent-head{display:flex;flex-direction:column;gap:14px}
+.agent-head .sk-h1{max-width:900px}
+.agent-lede{font-size:16px;line-height:1.6;color:var(--sk-muted);max-width:760px}
+.sk-card.agent-card{gap:14px}
+.agent-card-title{font-size:20px;font-weight:800;letter-spacing:-.02em}
+.agent-card .sk-card-note{line-height:1.55;max-width:680px}
+.agent-table{border-collapse:collapse;width:100%;text-align:left;font-size:14px;font-variant-numeric:tabular-nums}
+.agent-table th{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--sk-muted);padding:10px 12px 10px 0;border-bottom:1px solid #E8E8E8;white-space:nowrap}
+.agent-table td{padding:14px 12px 14px 0;border-bottom:1px solid var(--sk-line);font-weight:500}
+.agent-table td:first-child{font-weight:700}
+.agent-table tr:last-child td{border-bottom:0}
+.agent-quotes{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px}
+.agent-budget{background:var(--sk-ink);color:#fff;border-radius:12px;padding:32px;display:flex;flex-direction:column;justify-content:center;gap:12px}
+.agent-budget strong{font-size:76px;font-weight:900;line-height:.95;letter-spacing:-.04em}
+.agent-budget p{font-size:14px;line-height:1.5;color:var(--sk-soft)}
+.agent-orders{font-size:15px;line-height:1.6}
+.sk-card.agent-report-form{gap:18px}
+.agent-report-form label{display:flex;flex-direction:column;gap:8px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--sk-muted)}
+.agent-report-form textarea,.agent-report-form input,.agent-report-form select{width:100%;min-width:0;background:#fff;border:1px solid #D9D9D9;border-radius:4px;padding:12px 14px;font:500 15px/1.5 var(--sk-font-stack);letter-spacing:0;text-transform:none;color:var(--sk-ink)}
+.agent-report-form input,.agent-report-form select{height:48px;padding-block:0}
+.agent-report-form textarea{min-height:110px;resize:vertical}
+.agent-report-form textarea:focus-visible,.agent-report-form select:focus-visible{outline:2px solid var(--sk-ink);outline-offset:2px}
+.agent-form-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.agent-submit{align-self:flex-start}
+.agent-status{font-size:14px;font-weight:600;color:var(--sk-muted);min-height:1.5em}
+@media(max-width:900px){.agent-page .sk-header{height:64px;padding:0 16px}.agent-quotes{grid-template-columns:minmax(0,1fr)}.agent-budget{padding:24px 22px}.agent-budget strong{font-size:56px}}
+@media(max-width:640px){.sk-card.agent-card{padding:22px 18px}.agent-form-row{grid-template-columns:minmax(0,1fr)}.agent-submit{align-self:stretch}.agent-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}.agent-table,.agent-table tbody,.agent-table tr{display:block}.agent-table tr{padding:12px 0;border-bottom:1px solid var(--sk-line)}.agent-table tr:last-child{border-bottom:0}.agent-table td{display:flex;justify-content:space-between;gap:16px;padding:3px 0;border:0;text-align:right}.agent-table td::before{content:attr(data-label);font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--sk-muted);text-align:left}.agent-table td:first-child{font-size:16px;padding-bottom:8px;text-align:left}.agent-table td:first-child::before{content:none}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 /* ───────── Shopkeeper merchant dashboard (components/workspace.tsx + components/dashboard/*) ───────── */
 body:has(.sk){background:#F6F1E7}
-.sk{--sk-ink:#0F0F0F;--sk-accent:#F8C642;--sk-cream:#F6F1E7;--sk-coral:#F86868;--sk-red:#A61B1B;--sk-red-2:#C0392B;--sk-alarm:#E04848;--sk-muted:#475467;--sk-soft:#A3A3A3;--sk-grey:#5C5C5C;--sk-line:#EFEFEF;--sk-chip:#F0F0F0;min-height:100vh;background:var(--sk-cream);color:var(--sk-ink);font-family:var(--sk-font),'Montserrat',system-ui,sans-serif;font-size:15px;font-weight:500;display:flex;flex-direction:column}
+.sk{min-height:100vh;background:var(--sk-cream);color:var(--sk-ink);font-family:var(--sk-font-stack);font-size:15px;font-weight:500;display:flex;flex-direction:column}
 .sk h1,.sk h2,.sk h3{font-family:inherit;margin:0}
 .sk strong{font-weight:700}
 .sk small{font-size:13px}

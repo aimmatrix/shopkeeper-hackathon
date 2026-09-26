@@ -169,7 +169,7 @@ export default function Storefront() {
           {rest.map((product, i) => {
             const [colour, size] = product.variant.split(' / ');
             return <li key={product.id} className={styles.card}>
-              <div className={styles.cardArt} data-tone={product.tone}>
+              <div className={styles.cardArt}>
                 <span className={styles.cardIndex}>{String(i + 2).padStart(2, '0')}</span>
                 <ProductArt kind={product.kind} className={styles.cardSvg} />
               </div>
@@ -191,14 +191,14 @@ export default function Storefront() {
 
 function SampleNotice() {
   return <div className={styles.notice}>
-    <p><span className={styles.noticeTag}>Sample store</span> Demo reservations and checkout only — no payment is taken.</p>
+    <p><span className={styles.noticeTag}>DEMO STORE</span> Demo reservations and checkout only — no payment is taken.</p>
     <a href="/">Merchant view <ArrowUpRight size={13} /></a>
   </div>;
 }
 
 function Masthead({ syncedAt, failing }: { syncedAt: Date | null; failing: boolean }) {
   return <header className={styles.masthead}>
-    <a href="/shop" className={styles.wordmark}>North <i>&</i> Form<span>.</span></a>
+    <a href="/shop" className={styles.wordmark}>North <i>&</i> Form</a>
     <nav className={styles.mastNav} aria-label="Shop">
       <a href="#top">The edit</a>
       <a href="#catalogue-title">Collection</a>
@@ -215,10 +215,10 @@ function Hero({ product, flashed, busy, paused, onReserve }: { product: Product;
   const [qty, setQty] = useState(1);
   const left = available(product);
   const [colour, size] = product.variant.split(' / ');
+  const [first, ...rest] = product.name.split(' ');
   const reserveText = `Reserve ${qty} medium washed-black Everyday Hoodie${qty > 1 ? 's' : ''}`;
   return <section className={styles.hero} id="top" aria-labelledby="hero-title">
     <div className={styles.heroArt}>
-      <span className={styles.heroWord} aria-hidden>Everyday</span>
       <span className={styles.plate}>No. 01 — Bestseller</span>
       <ProductArt kind={product.kind} className={styles.heroSvg} />
       <div className={styles.seal} data-flash={flashed || undefined} aria-hidden>
@@ -227,7 +227,7 @@ function Hero({ product, flashed, busy, paused, onReserve }: { product: Product;
     </div>
     <div className={styles.heroCopy}>
       <p className={styles.eyebrow}>The edit · {product.sku}</p>
-      <h1 id="hero-title">{product.name}</h1>
+      <h1 id="hero-title"><span className={styles.hl}>{first}</span>{rest.length ? ` ${rest.join(' ')}` : ''}</h1>
       <p className={styles.lede}>The one we reach for first. Washed black, relaxed through the body, made to be worn every day.</p>
       <div className={styles.priceRow}>
         <span className={styles.price}>{money(product.price)}</span>
