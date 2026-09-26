@@ -3,40 +3,39 @@ import { money } from '@/lib/types';
 import type { Message } from '@/lib/types';
 import { Arrow, type Dash, plural, shortDate, unitName } from './shared';
 import { arrival, openPurchase } from './today';
+import { BotAvatar, type Mood, TypeOut, TypingDots } from './bot-presence';
 import s from './inbox.module.css';
 
 const CUSTOMER = 'Alex Morgan';
 const ASSISTANT = 'Shopkeeper Sales Assistant';
 const TRY_IT = 'Could I get two hoodies?';
+/** The dots stay up at least this long, so a fast reply doesn't flash past. */
+const MIN_THINK = 700;
 /** The header names the sales assistant, so only other shop-side senders get a name above their bubble. */
 const LABEL: Partial<Record<Message['sender'], string>> = { stock: 'Stock manager', merchant: 'You' };
 const side = (sender: Message['sender']) => sender === 'customer' ? 'user' : 'bot';
-
-/** GrokBot-style bot avatar: a soft blob with two eyes, in Shopkeeper yellow. */
-function Blob({ size }: { size: number }) {
-  return <svg className={s.blob} width={size} height={size} viewBox="0 0 40 40" aria-hidden="true">
-    <path d="M20.6 4.5c8.4 0 14.9 5.9 14.9 14.2 0 9.2-6.7 16.8-16 16.8-8.4 0-15-5.9-15-14.1C4.5 12.2 11.6 4.5 20.6 4.5Z" fill="#F8C642" />
-    <ellipse cx="21.5" cy="19" rx="1.5" ry="2.6" fill="#141414" />
-    <ellipse cx="27.5" cy="18.4" rx="1.5" ry="2.6" fill="#141414" />
-  </svg>;
-}
-
-function Bubble({ sender, text, turn }: { sender: Message['sender']; text: string; turn: boolean }) {
-  return <div className={[s.msg, s[side(sender)], turn && s.turn].filter(Boolean).join(' ')}>
-    {LABEL[sender] && <span className={s.label}>{LABEL[sender]}</span>}
-    <span className={s.bubble}>{text}</span>
-  </div>;
-}
+const cx = (...names: (string | false | undefined)[]) => names.filter(Boolean).join(' ');
 
 export function InboxView(d: Dash) {
   const { state, product, busy, needRestock, incoming } = d;
   const [text, setText] = useState('');
   // The customer's message shows immediately while the reply is on its way.
   const [pending, setPending] = useState<string | null>(null);
+  const [thinking, setThinking] = useState(false);
+  // New replies are held back until they can type themselves out; ones already on screen at load stay put.
+  const [streamId, setStreamId] = useState<string | null>(null);
+  const [flash, setFlash] = useState<'done' | 'error' | null>(null);
+  const known = useRef<Set<string> | null>(null);
+  const sentAt = useRef(0);
+  const flashTimer = useRef(0);
   const feed = useRef<HTMLDivElement>(null);
   const messages = state.messages;
-  const last = messages[messages.length - 1];
+  known.current ??= new Set(messages.map(m => m.id));
+  const shown = messages.filter(m => side(m.sender) === 'user' || known.current!.has(m.id) || m.id === streamId);
+  const last = shown[shown.length - 1];
   const preview = pending ?? last?.text;
+  const face = thinking ? null : [...shown].reverse().find(m => side(m.sender) === 'bot')?.id;
+  const mood: Mood = state.paused ? 'paused' : flash === 'error' ? 'error' : thinking ? 'thinking' : streamId ? 'typing' : flash ?? 'idle';
   const sent = messages.filter(m => m.sender === 'customer').length > 1;
   const orders = state.orders.filter(o => o.customer === CUSTOMER && o.productId === product.id);
   const held = orders.filter(o => o.status === 'reserved').reduce((n, o) => n + o.quantity, 0);
@@ -45,16 +44,51 @@ export function InboxView(d: Dash) {
   const short = shortMatch ? Number(shortMatch[1]) : 0;
   const open = openPurchase(d);
 
-  useEffect(() => { const el = feed.current; if (el) el.scrollTop = el.scrollHeight; }, [messages.length, pending]);
+  useEffect(() => { const el = feed.current; if (el) el.scrollTop = el.scrollHeight; }, [shown.length, pending, thinking]);
+
+  // Start typing out the next unseen reply once the dots have had their moment.
+  useEffect(() => {
+    if (streamId) return;
+    const next = messages.find(m => !known.current!.has(m.id) && side(m.sender) === 'bot');
+    if (!next) return;
+    const timer = window.setTimeout(() => { setThinking(false); setStreamId(next.id); }, Math.max(0, sentAt.current + MIN_THINK - Date.now()));
+    return () => clearTimeout(timer);
+  }, [messages, streamId]);
+
+  // If a send succeeds but no reply ever arrives, don't leave the dots running forever.
+  useEffect(() => {
+    if (!thinking || pending !== null) return;
+    const timer = window.setTimeout(() => setThinking(false), MIN_THINK + 1500);
+    return () => clearTimeout(timer);
+  }, [thinking, pending]);
+
+  useEffect(() => () => clearTimeout(flashTimer.current), []);
+
+  function flashMood(kind: 'done' | 'error') {
+    clearTimeout(flashTimer.current);
+    setFlash(kind);
+    flashTimer.current = window.setTimeout(() => setFlash(null), kind === 'error' ? 2400 : 1400);
+  }
+
+  function finishStream(id: string) {
+    known.current!.add(id);
+    setStreamId(null);
+    flashMood('done');
+  }
 
   async function send(body: string) {
-    if (!body.trim() || pending !== null) return;
+    if (!body.trim() || thinking || streamId) return;
     const typed = text;
+    sentAt.current = Date.now();
+    setThinking(true);
     setPending(body);
     if (body === typed) setText('');
     const ok = await d.act({ type: 'customer_message', text: body, eventId: crypto.randomUUID() });
     setPending(null);
-    if (!ok && body === typed) setText(typed);
+    if (ok) return;
+    setThinking(false);
+    flashMood('error');
+    if (body === typed) setText(typed);
   }
 
   return <div className={s.inbox}>
@@ -64,7 +98,7 @@ export function InboxView(d: Dash) {
         <div className={s.lights} aria-hidden="true"><i /><i /><i /></div>
         <div className={s.section}><h2 id="sk-convos-title">Conversations</h2><span>{preview ? 1 : 0}</span></div>
         {preview ? <div className={s.item} aria-current="true">
-          <span className={s.pair} aria-hidden="true"><span className={s.letter}>A</span><Blob size={24} /></span>
+          <span className={s.pair} aria-hidden="true"><span className={s.letter}>A</span><BotAvatar mood={mood} size={24} className={s.pairBot} /></span>
           <span className={s.itemText}>
             <span className={s.itemTop}><strong>{CUSTOMER}</strong><span className={s.tag}>Web chat</span></span>
             <span className={s.preview}>{preview}</span>
@@ -74,29 +108,39 @@ export function InboxView(d: Dash) {
 
       <section className={s.chat} aria-label="Customer chat">
         <header className={s.head}>
-          <div className={s.pill}><Blob size={26} /><h2>{ASSISTANT}</h2><span className={s.tag}>Guided demo</span></div>
+          <div className={s.pill}><BotAvatar mood={mood} size={26} /><h2>{ASSISTANT}</h2><span className={s.tag}>Guided demo</span></div>
         </header>
         <div className={s.feed} ref={feed} role="log" aria-label="Messages">
-          {messages.length === 0 && pending === null && <div className={s.empty}>
-            <Blob size={56} />
+          {shown.length === 0 && pending === null && <div className={s.empty}>
+            <BotAvatar mood={mood} size={56} />
             <strong>{ASSISTANT}</strong>
             <span>Answers questions about sizes, stock and reservations. Replies are a guided demo.</span>
           </div>}
-          {messages.map((m, i) => <Bubble key={m.id} sender={m.sender} text={m.text} turn={i > 0 && side(messages[i - 1].sender) !== side(m.sender)} />)}
-          {pending !== null && <>
-            <Bubble sender="customer" text={pending} turn={!!last && side(last.sender) !== 'user'} />
-            <div className={`${s.msg} ${s.bot} ${s.turn}`} role="status">
-              <span className="sr-only">The sales assistant is replying</span>
-              <span className={`${s.bubble} ${s.typing}`} aria-hidden="true"><i /><i /><i /></span>
-            </div>
-          </>}
+          {shown.map((m, i) => {
+            const bot = side(m.sender) === 'bot';
+            return <div key={m.id} className={cx(s.msg, s[side(m.sender)], i > 0 && side(shown[i - 1].sender) !== side(m.sender) && s.turn)}>
+              {bot && <span className={s.face}>{m.id === face && <BotAvatar mood={mood} size={28} />}</span>}
+              <div className={s.stack}>
+                {LABEL[m.sender] && <span className={s.label}>{LABEL[m.sender]}</span>}
+                <span className={s.bubble}>{m.id === streamId ? <TypeOut text={m.text} onDone={() => finishStream(m.id)} /> : m.text}</span>
+              </div>
+            </div>;
+          })}
+          {pending !== null && <div className={cx(s.msg, s.user, !!last && side(last.sender) === 'bot' && s.turn)}>
+            <div className={s.stack}><span className={s.bubble}>{pending}</span></div>
+          </div>}
+          {thinking && <div className={cx(s.msg, s.bot, s.turn)} role="status">
+            <span className={s.face}><BotAvatar mood={mood} size={28} /></span>
+            <span className="sr-only">The sales assistant is replying</span>
+            <span className={cx(s.bubble, s.typing)} aria-hidden="true"><TypingDots /></span>
+          </div>}
         </div>
         <div className={s.compose}>
-          {!sent && pending === null && <button className={s.try} disabled={busy || state.paused} onClick={() => send(TRY_IT)}>Try it: “{TRY_IT}”</button>}
+          {!sent && !thinking && !streamId && <button className={s.try} disabled={busy || state.paused} onClick={() => send(TRY_IT)}>Try it: “{TRY_IT}”</button>}
           <form className={s.bar} onSubmit={e => { e.preventDefault(); void send(text); }}>
             <label htmlFor="sk-reply" className="sr-only">Message as the customer</label>
             <input id="sk-reply" type="text" value={text} onChange={e => setText(e.target.value)} maxLength={2000} placeholder={state.paused ? 'Workflow paused. Resume it from the store menu.' : 'Message as Alex Morgan…'} disabled={busy || state.paused} />
-            <button className={s.send} aria-label="Send message" disabled={busy || state.paused || !text.trim()}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 19V5" /><path d="m5 12 7-7 7 7" /></svg></button>
+            <button className={s.send} aria-label="Send message" disabled={busy || state.paused || thinking || !!streamId || !text.trim()}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 19V5" /><path d="m5 12 7-7 7 7" /></svg></button>
           </form>
         </div>
       </section>
