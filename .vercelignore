@@ -9,3 +9,5 @@ node_modules/
 .data/
 .vercel/
 *.tsbuildinfo
+.next-dashboard/
+public/models/*.blend
