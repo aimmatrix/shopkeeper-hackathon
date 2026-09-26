@@ -1,4 +1,4 @@
-/* Uses the global North & Form tokens from app/globals.css (--ink, --line, --lime, --font-display…). */
+/* Uses the global Fleek 0.5 tokens from app/globals.css (--ink, --line, --lime, --font-display…). */
 .root { border-top: 1px solid var(--line); padding: 27px 0 8px; margin-top: 24px; }
 
 .header { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; }

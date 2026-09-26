@@ -3,7 +3,7 @@ import { available, type ShopState } from '../types';
 /** Customer-facing facts only. Never expose messages, order owners, event keys or supplier costs. */
 export function customerCatalogue(state: ShopState) {
   return {
-    store: 'North & Form',
+    store: 'Fleek 0.5',
     mode: 'fictional hackathon demo',
     currency: 'GBP',
     version: state.version,

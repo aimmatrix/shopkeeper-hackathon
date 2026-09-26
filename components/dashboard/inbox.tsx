@@ -7,7 +7,7 @@ import { BotAvatar, type Mood, TypeOut, TypingDots } from './bot-presence';
 import s from './inbox.module.css';
 
 const CUSTOMER = 'Alex Morgan';
-const ASSISTANT = 'Shopkeeper Sales Assistant';
+const ASSISTANT = 'ShpKpr Sales Assistant';
 const TRY_IT = 'Could I get two hoodies?';
 /** The dots stay up at least this long, so a fast reply doesn't flash past. */
 const MIN_THINK = 700;

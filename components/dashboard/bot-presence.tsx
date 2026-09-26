@@ -190,7 +190,7 @@ export function TypeOut({ text, onDone }: { text: string; onDone?: () => void })
   return <><span className="sr-only">{text}</span><span ref={span} aria-hidden="true">{words.slice(0, shown).join('')}</span></>;
 }
 
-/** GrokBot gives each bot its own colour. Shopkeeper's agents keep a stable one per role. */
+/** GrokBot gives each bot its own colour. ShpKpr's agents keep a stable one per role. */
 const ROLE_COLORS: [RegExp, string][] = [
   [/sales/i, '#F8C642'], [/stock/i, '#8E8E8E'], [/sourcing/i, '#7B4FE0'], [/outreach/i, '#FF6B00'],
   [/purchas/i, '#2F9BFF'], [/care|recovery/i, '#E0368C'],

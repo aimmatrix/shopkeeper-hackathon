@@ -13,7 +13,7 @@ const cx = (...names: (string | false | undefined)[]) => names.filter(Boolean).j
 
 export type Bot = { name: string; shape: Shape; color: string };
 
-/** Shopkeeper's agents. Each keeps one face across every chat, the way GrokBot bots do. */
+/** ShpKpr's agents. Each keeps one face across every chat, the way GrokBot bots do. */
 export const AGENTS = {
   sales: { name: 'Sales agent', shape: 'blob', color: '#F8C642' },
   stock: { name: 'Stock agent', shape: 'hexagon', color: '#8E8E8E' },
@@ -150,7 +150,7 @@ export function Typing({ side = 'in', face, author }: { side?: 'in' | 'out'; fac
   </div>;
 }
 
-/** A quiet line across the chat: "Alex joined the waitlist", "Handed over to Shopkeeper Ltd". */
+/** A quiet line across the chat: "Alex joined the waitlist", "Handed over to ShpKpr Ltd". */
 export function Note({ children }: { children: ReactNode }) {
   return <p className={s.note}>{children}</p>;
 }

@@ -183,7 +183,7 @@ export default function Storefront() {
       </section>
     </main>
     <footer className={styles.footer}>
-      <p><strong>North & Form</strong> is a fictional merchant used to demonstrate Shopkeeper. Stock, reservations and demo checkouts are stored as sample records; no payment is ever taken and nothing ships.</p>
+      <p><strong>Fleek 0.5</strong> is a concept store built with ShpKpr for the GrokBot hackathon, where Fleek is a sponsor. It is not operated by Fleek. Stock, reservations and demo checkouts are stored as sample records; no payment is ever taken and nothing ships.</p>
       <a href="/">Open the merchant workspace <ArrowUpRight size={14} /></a>
     </footer>
   </div>;
@@ -198,7 +198,7 @@ function SampleNotice() {
 
 function Masthead({ syncedAt, failing }: { syncedAt: Date | null; failing: boolean }) {
   return <header className={styles.masthead}>
-    <a href="/shop" className={styles.wordmark}>North <i>&</i> Form</a>
+    <a href="/shop" className={styles.wordmark}>Fleek <i>0.5</i></a>
     <nav className={styles.mastNav} aria-label="Shop">
       <a href="#top">The edit</a>
       <a href="#catalogue-title">Collection</a>

@@ -19,7 +19,7 @@ export type EvidenceCard = {
   content: string;
   id: string;
   hostname: string;
-  /** When Shopkeeper fetched this result from Tavily (ISO). */
+  /** When ShpKpr fetched this result from Tavily (ISO). */
   fetchedAt: string;
   /** Publication date if the search index reported one, otherwise null (unknown). */
   publishedDate: string | null;

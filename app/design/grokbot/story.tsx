@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { NegotiationCard } from '@/components/grok/negotiation-card';
+import type { NegotiatedTerms } from '@/lib/negotiation';
 import type { Mood } from '@/components/dashboard/bot-presence';
 import { addDays, shortDate } from '@/components/dashboard/shared';
 import {
@@ -10,13 +12,13 @@ import {
 
 /*
  * The whole demo story on sample data, to show how the kit fits together:
- * a customer asks → Shopkeeper Ltd restocks → the waitlist hears the good news.
+ * a customer asks → ShpKpr Ltd restocks → the waitlist hears the good news.
  * Timings, copy and gates are suggestions for the real flow in the dashboard.
  */
 
 type ChatId = 'alex' | 'team' | 'waitlist';
 type Gate = 'pick' | 'send' | 'pay' | 'notify' | 'broadcast';
-type Ctx = { choice: string | null; passed: Set<Gate>; act: (g: Gate) => void; pick: (id: string) => void };
+type Ctx = { sentOffer: NegotiatedTerms | null; sendOffer: (terms: NegotiatedTerms) => void; rejected: string | null; reject: (reason: string) => void; agreed: NegotiatedTerms | null; agree: (terms: NegotiatedTerms) => void; choice: string | null; passed: Set<Gate>; act: (g: Gate) => void; pick: (id: string) => void };
 type Step =
   | { kind: 'msg'; chat: ChatId; side?: 'in' | 'out'; author: string; face?: Face; delay: number; text: (c: Ctx) => string; type?: boolean; attach?: (c: Ctx) => ReactNode }
   | { kind: 'note'; chat: ChatId; delay: number; text: (c: Ctx) => string }
@@ -29,10 +31,11 @@ const QUOTES = [
   { id: 'east', supplier: 'East London Supply', place: 'London', unit: 25, shipping: 8, minimum: 10, days: 2, email: 'trade@eastlondonsupply.co.uk' },
 ];
 const gbp = (n: number) => `£${Number.isInteger(n) ? n : n.toFixed(2)}`;
-const order = (id: string | null) => {
+const order = (id: string | null, terms?: NegotiatedTerms | null) => {
   const q = QUOTES.find(x => x.id === id) ?? QUOTES[0];
-  const units = Math.max(20, q.minimum);
-  return { q, units, total: units * q.unit + q.shipping, arrives: shortDate(addDays(new Date(), q.days)) };
+  const units = terms?.quantity ?? Math.max(20, q.minimum);
+  const unit = terms ? terms.unitCost / 100 : q.unit;
+  return { q, units, unit, total: units * unit + q.shipping, arrives: shortDate(addDays(new Date(), q.days)) };
 };
 
 /** Twelve people already waiting, plus Alex from the first chat. */
@@ -51,7 +54,7 @@ const STEPS: Step[] = [
   { kind: 'msg', chat: 'alex', side: 'out', author: 'Sales agent', face: bot(AGENTS.sales), delay: 1500, type: true, text: () => 'Hi Alex! We’ve only got 1 in medium right now, and 12 people are already waiting for more. I can reserve that 1 for you and add you to the waitlist for the other 2. Shall I?' },
   { kind: 'msg', chat: 'alex', author: 'Alex Morgan', face: alex, delay: 2600, text: () => 'Yes please, go ahead!' },
   { kind: 'msg', chat: 'alex', side: 'out', author: 'Sales agent', face: bot(AGENTS.sales), delay: 1400, type: true, text: () => 'Done! 1 hoodie is reserved for you, and you’re on the waitlist for 2 more. We’ll email you the moment they’re back in stock.' },
-  { kind: 'note', chat: 'alex', delay: 2000, text: () => 'Sales agent passed this to Shopkeeper Ltd' },
+  { kind: 'note', chat: 'alex', delay: 2000, text: () => 'Sales agent passed this to ShpKpr Ltd' },
   { kind: 'move', to: 'team', delay: 1400 },
 
   { kind: 'msg', chat: 'team', author: 'Stock agent', face: bot(AGENTS.stock), delay: 1300, type: true,
@@ -63,16 +66,16 @@ const STEPS: Step[] = [
   { kind: 'msg', chat: 'team', author: 'Outreach agent', face: bot(AGENTS.outreach), delay: 1400, type: true,
     text: c => `Here’s the order email for ${order(c.choice).q.supplier}. Send it when you’re happy.`,
     attach: c => { const o = order(c.choice); return <EmailCard to={o.q.email} subject={`Order: ${o.units} × Everyday Hoodie (washed black, M)`} state={c.passed.has('send') ? 'sent' : 'draft'} onSend={() => c.act('send')} sentLabel="Sent just now"
-      body={`Hi ${o.q.supplier} team,\n\nWe’d like to order ${o.units} Everyday Hoodies in washed black, size M (SKU EH-WB-M). Please confirm availability and your delivery date, and send over an invoice.\n\nThanks,\nNorth & Form`} />; } },
+      body={`Hi ${o.q.supplier} team,\n\nWe’d like to order ${o.units} Everyday Hoodies in washed black, size M (SKU EH-WB-M). Please confirm availability and your delivery date, and send over an invoice.\n\nThanks,\nFleek 0.5`} />; } },
   { kind: 'gate', chat: 'team', gate: 'send', hint: 'Check the email, then send it' },
   { kind: 'note', chat: 'team', delay: 400, text: c => `Email sent to ${order(c.choice).q.supplier}` },
   { kind: 'msg', chat: 'team', author: 'Supplier', delay: 2400, face: { kind: 'person', name: 'North Thread' },
     text: c => { const o = order(c.choice); return `Thanks! We can do all ${o.units} in washed black, medium. They ship in ${o.q.days} days — invoice attached.`; },
-    attach: c => { const o = order(c.choice); return <InvoiceCard number="#2041" from={o.q.supplier} state={c.passed.has('pay') ? 'paid' : 'due'} onPay={() => c.act('pay')} due="Due on receipt" paidLabel="Paid just now"
-      lines={[{ label: `${o.units} × Everyday Hoodie`, amount: gbp(o.units * o.q.unit) }, { label: 'Shipping', amount: gbp(o.q.shipping) }]} total={gbp(o.total)} />; } },
+    attach: c => { const o = order(c.choice, c.agreed); return <NegotiationCard supplier={o.q.supplier} unitCost={Math.round(o.q.unit * 100)} quantity={Math.max(20, o.q.minimum)} minimum={o.q.minimum} shipping={o.q.shipping * 100} sent={c.sentOffer} onSend={c.sendOffer} agreed={c.agreed} rejected={c.rejected} onReject={c.reject} onAgree={c.agree} disabled={c.passed.has('pay')}><InvoiceCard number="#2041" from={o.q.supplier} state={c.passed.has('pay') ? 'paid' : 'due'} onPay={() => c.act('pay')} due="Due on receipt" paidLabel="Paid just now"
+      lines={[{ label: `${o.units} × Everyday Hoodie`, amount: gbp(o.units * o.unit) }, { label: 'Shipping', amount: gbp(o.q.shipping) }]} total={gbp(o.total)} /></NegotiationCard>; } },
   { kind: 'gate', chat: 'team', gate: 'pay', hint: 'Pay the invoice to confirm the order' },
   { kind: 'msg', chat: 'team', author: 'Purchasing agent', face: bot(AGENTS.purchasing), delay: 1300, type: true,
-    text: c => { const o = order(c.choice); return `Paid ${gbp(o.total)}. ${o.units} hoodies arrive ${o.arrives}, and I’ve added them to incoming stock. Shall I tell the 13 people on the waitlist?`; },
+    text: c => { const o = order(c.choice, c.agreed); return `Paid ${gbp(o.total)}. ${o.units} hoodies arrive ${o.arrives}, and I’ve added them to incoming stock. Shall I tell the 13 people on the waitlist?`; },
     attach: c => <div><PrimaryButton disabled={c.passed.has('notify')} onClick={() => c.act('notify')}>Notify the waitlist →</PrimaryButton></div> },
   { kind: 'gate', chat: 'team', gate: 'notify', hint: 'Tell the waitlist the good news' },
   { kind: 'note', chat: 'team', delay: 300, text: () => 'Handed over to Waitlist update' },
@@ -82,7 +85,7 @@ const STEPS: Step[] = [
     text: () => 'Here’s the update for everyone waiting. I’ll email all 13 of them.',
     attach: c => { const o = order(c.choice); const sent = c.passed.has('broadcast'); return <>
       <EmailCard to="13 people on the waitlist" subject="Good news: the Everyday Hoodie is back" state={sent ? 'sent' : 'draft'} onSend={() => c.act('broadcast')} sendLabel="Send to 13 people" sentLabel="Sent to 13 people"
-        body={`Hi {first name},\n\nGood news! The Everyday Hoodie in washed black (M) is back in stock on ${o.arrives}. You’re on our waitlist, so you get first pick: reply to this email and we’ll hold one for you.\n\nThanks for waiting,\nNorth & Form`} />
+        body={`Hi {first name},\n\nGood news! The Everyday Hoodie in washed black (M) is back in stock on ${o.arrives}. You’re on our waitlist, so you get first pick: reply to this email and we’ll hold one for you.\n\nThanks for waiting,\nFleek 0.5`} />
       <Recipients people={WAITLIST} sent={sent} />
       {sent && <ReactionBar people={WAITLIST} />}
     </>; } },
@@ -94,7 +97,7 @@ const STEPS: Step[] = [
 
 const CHATS: Record<ChatId, { title: string; tag: string; section: string; face: Face; busy: string }> = {
   alex: { title: 'Alex Morgan', tag: 'Web chat', section: 'Customers', face: { kind: 'pair', name: 'Alex Morgan', bot: AGENTS.sales }, busy: 'Sales agent is chatting with Alex…' },
-  team: { title: 'Shopkeeper Ltd', tag: '4 agents', section: 'Team', face: { kind: 'group', bots: [AGENTS.stock, AGENTS.outreach, AGENTS.purchasing] }, busy: 'The agents are working…' },
+  team: { title: 'ShpKpr Ltd', tag: '4 agents', section: 'Team', face: { kind: 'group', bots: [AGENTS.stock, AGENTS.outreach, AGENTS.purchasing] }, busy: 'The agents are working…' },
   waitlist: { title: 'Waitlist update', tag: 'Email', section: 'Outreach', face: { kind: 'bot', bot: AGENTS.care }, busy: 'Customer care agent is writing…' },
 };
 const ORDER: ChatId[] = ['alex', 'team', 'waitlist'];
@@ -115,13 +118,16 @@ function Run() {
   const [typing, setTyping] = useState<number | null>(null);
   const [active, setActive] = useState<ChatId>('alex');
   const [unread, setUnread] = useState<ChatId | null>(null);
+  const [sentOffer, setSentOffer] = useState<NegotiatedTerms | null>(null);
+  const [rejected, setRejected] = useState<string | null>(null);
+  const [agreed, setAgreed] = useState<NegotiatedTerms | null>(null);
   const [choice, setChoice] = useState<string | null>(null);
   const [passed, setPassed] = useState<Set<Gate>>(new Set());
   const [typed, setTyped] = useState<Set<number>>(new Set()); // messages that have finished typing out
   const [seen, setSeen] = useState(0); // messages before this were on screen when the chat last changed: never retype them
   const open = (id: ChatId) => { setActive(id); setSeen(n); };
   const next = STEPS[n];
-  const ctx: Ctx = { choice, passed, act: g => setPassed(p => new Set(p).add(g)), pick: setChoice };
+  const ctx: Ctx = { sentOffer, sendOffer: setSentOffer, rejected, reject: setRejected, agreed, agree: setAgreed, choice, passed, act: g => setPassed(p => new Set(p).add(g)), pick: setChoice };
 
   // Advance the story: gates wait for a click, everything else waits its delay (with typing shown near the end).
   useEffect(() => {
@@ -141,19 +147,20 @@ function Run() {
   const done = !next;
   const waitingOn = next?.kind === 'gate' ? next : null;
   const busyIn = next && next.kind !== 'gate' && next.kind !== 'move' ? next.chat : null;
-  const moodOf = (id: ChatId): Mood => done && id === 'waitlist' ? 'done' : waitingOn?.chat === id ? 'waiting' : typing !== null && busyIn === id ? 'thinking' : 'idle';
+  const negotiating = Boolean(sentOffer && !agreed && !rejected);
+  const moodOf = (id: ChatId): Mood => negotiating && id === 'team' ? 'thinking' : done && id === 'waitlist' ? 'done' : waitingOn?.chat === id ? 'waiting' : typing !== null && busyIn === id ? 'thinking' : 'idle';
   const withMood = (face: Face, mood: Mood): Face => face.kind === 'person' ? face : { ...face, mood };
   const lastText = (id: ChatId) => [...STEPS.slice(0, n)].reverse().flatMap(st => st.kind === 'msg' && st.chat === id ? [st.text(ctx)] : [])[0];
 
   const chat = CHATS[active];
   const pending = typing !== null ? STEPS[typing] : null;
-  const status = done ? 'All done. The restock is on its way.'
+  const status = negotiating && active === 'team' ? 'Renegotiation sent. Waiting for the supplier’s response…' : done ? 'All done. The restock is on its way.'
     : waitingOn?.chat === active ? waitingOn.hint
     : busyIn === active ? chat.busy
     : waitingOn ? `Waiting for you in ${CHATS[waitingOn.chat].title}` : 'Working…';
 
   return <GrokWindow
-    sidebar={<GrokSidebar title="North & Form" activeId={active} onSelect={id => open(id as ChatId)}
+    sidebar={<GrokSidebar title="Fleek 0.5" activeId={active} onSelect={id => open(id as ChatId)}
       footer="Simulated demo · You approve each send and payment."
       sections={ORDER.map(id => ({ title: CHATS[id].section, items: [{
         id, name: CHATS[id].title, tag: CHATS[id].tag, face: withMood(CHATS[id].face, moodOf(id)),

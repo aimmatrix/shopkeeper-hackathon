@@ -71,7 +71,7 @@ export default function ProductViewer({ product, showFitPreview = true }: { prod
     </div>
     <span id={keyboardHint} className={styles.srOnly}>Use arrow keys to rotate, plus and minus to zoom, or Home to reset.</span>
     <div className={styles.bottom}>
-      <p id={hint}>{status === 'ready' ? 'Touch the fabric · Drag to turn' : 'North & Form · The collection'}</p>
+      <p id={hint}>{status === 'ready' ? 'Touch the fabric · Drag to turn' : 'Fleek 0.5 · The collection'}</p>
       <div className={styles.tools} role="group" aria-label={`${product.name} view controls`}>
         <button type="button" disabled={status !== 'ready'} onClick={() => controls.current?.zoom(-1)} aria-label={`Zoom out ${product.name}`} title="Zoom out (−)"><Minus size={15} /></button>
         <button type="button" disabled={status !== 'ready'} onClick={() => controls.current?.zoom(1)} aria-label={`Zoom in ${product.name}`} title="Zoom in (+)"><Plus size={15} /></button>

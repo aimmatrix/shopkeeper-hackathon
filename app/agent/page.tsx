@@ -16,12 +16,12 @@ export default function AgentWorkspace() {
   return <div className="sk agent-page">
     <div className="sk-strip"><b>DEMO STORE</b><span>Sample catalogue and suppliers. This page records a recommendation only; it never approves a purchase.</span></div>
     <header className="sk-header">
-      <a className="sk-brand" href="/" aria-label="Shopkeeper, back to the merchant workspace"><Mark /><span>shopkeeper</span></a>
+      <a className="sk-brand" href="/" aria-label="ShpKpr, back to the merchant workspace"><Mark /><span>ShpKpr</span></a>
       <a className="sk-text-link" href="/">← Merchant workspace</a>
     </header>
     <main className="sk-main agent-main">
       <div className="agent-head">
-        <span className="sk-kicker">SHOPKEEPER · GROKBOT HANDOFF</span>
+        <span className="sk-kicker">SHPKPR · GROKBOT HANDOFF</span>
         <h1 className="sk-h1 md">Make the case for a <span className="sk-hl">smarter restock.</span></h1>
         <p className="agent-lede">Read the current records below. Compare minimum order quantities, shipping, lead time and total cash commitment. Customer interest is not paid demand. Recommend a supplier and quantity, then save a concise explanation for the merchant. This form records a recommendation only; it does not approve a purchase.</p>
       </div>

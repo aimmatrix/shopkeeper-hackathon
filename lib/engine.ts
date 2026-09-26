@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { Action, Activity, ShopState, available, money } from './types';
+import { rejectionReason } from './negotiation';
 import { applyRecoveryAction } from './commerce/recovery';
 
 export function seed(): ShopState {
@@ -30,7 +31,7 @@ export function seed(): ShopState {
     activities: [
       { id: 'a1', owner: 'stock', title: 'Your bestseller needs a restock', detail: 'Everyday Hoodie · 1 available · 12 units of unmet demand in the demo history', at },
       { id: 'a2', owner: 'sales', title: 'Customer demand, connected', detail: 'Demo conversations are linked to product variants, so enquiries can inform purchasing.', at },
-      { id: 'a3', owner: 'system', title: 'North & Form workspace ready', detail: 'Sample catalogue and supplier quotes loaded. No external messages or purchases are sent.', at },
+      { id: 'a3', owner: 'system', title: 'Fleek 0.5 workspace ready', detail: 'Sample catalogue and supplier quotes loaded. No external messages or purchases are sent.', at },
     ],
   };
 }
@@ -42,7 +43,7 @@ function log(state: ShopState, owner: Activity['owner'], title: string, detail: 
 
 export function transition(original: ShopState, action: Action): ShopState {
   if (!action || typeof action !== 'object' || Array.isArray(action) || typeof action.type !== 'string') throw new Error('Send a valid action object.');
-  const requiresEvent = ['customer_message', 'approve_purchase', 'agent_report', 'save_recovery_draft'].includes(action.type);
+  const requiresEvent = ['customer_message', 'approve_purchase', 'agent_report', 'save_recovery_draft', 'notify_waitlist'].includes(action.type);
   if (requiresEvent || 'eventId' in action) {
     if (!('eventId' in action) || typeof action.eventId !== 'string' || !action.eventId.trim() || action.eventId.length > 200) throw new Error('A valid event identifier is required.');
   }
@@ -59,9 +60,9 @@ export function transition(original: ShopState, action: Action): ShopState {
       return original;
     }
   }
-  const product = state.products.find(p => p.id === 'hoodie');
+  const product = state.products.find(p => p.id === (action.type === 'approve_purchase' ? action.productId ?? 'hoodie' : 'hoodie'));
   if (!product) throw new Error('The supported hoodie variant is unavailable.');
-  if (state.paused && ['customer_message', 'prepare_proposal', 'agent_report', 'approve_purchase'].includes(action.type)) throw new Error('The demo workflow is paused. Resume it to continue.');
+  if (state.paused && ['customer_message', 'prepare_proposal', 'agent_report', 'approve_purchase', 'notify_waitlist'].includes(action.type)) throw new Error('The demo workflow is paused. Resume it to continue.');
   switch (action.type) {
     case 'record_stock_request':
     case 'save_recovery_draft':
@@ -78,6 +79,12 @@ export function transition(original: ShopState, action: Action): ShopState {
       state.messages.push({ id: randomUUID(), sender: 'customer', text, at });
       // Explicit sample workflow: live GrokBot can use the same inventory API.
       const normalized = text.normalize('NFKC').replace(/[‘’ʼ]/g, "'").toLowerCase();
+      const incoming = state.purchases.find(p => p.productId === product.id && p.status === 'ordered');
+      const incomingQuote=state.quotes.find(q=>q.id===incoming?.quoteId);
+      const expected = incoming?.expectedAt ?? (incoming && incomingQuote ? new Date(Date.parse(incoming.createdAt)+incomingQuote.leadDays*86400000).toISOString() : undefined);
+      const dateLabel = expected ? new Date(expected).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}) : null;
+      const previousReply = state.messages.slice(0,-1).filter(m=>m.sender==='sales').at(-1)?.text ?? '';
+      const wantsNotification = /\b(notify|notification|waitlist|let me know|keep me updated)\b/.test(normalized) || (/^(yes|yes please|sure|please do)[!., ]*$/.test(normalized) && /notify|notification|waitlist/i.test(previousReply));
       let reply: string;
       // An explicit reserve/buy wins; softer verbs ("get the price", "my order") only count outside an enquiry.
       const enquiry = /\b(know|price|cost|how much|when|where|delivery|shipping|arrive|my order|order status|could you tell)\b/.test(normalized);
@@ -88,7 +95,18 @@ export function transition(original: ShopState, action: Action): ShopState {
         reply = 'I haven’t made a new reservation. For an existing order, the merchant can review its status in the workspace.';
       } else if (mentionsHoodie && wrongVariant) {
         reply = 'This demo stocks the Everyday Hoodie in washed black, medium. Would you like that variant? I haven’t reserved anything yet.';
-      } else if (mentionsHoodie && wantsOrder) {
+      } else if (wantsNotification) {
+        state.restockSubscriptions ??= [];
+        if(!state.restockSubscriptions.some(s=>s.productId===product.id&&s.customer==='Alex Morgan')) {
+          state.restockSubscriptions.push({productId:product.id,customer:'Alex Morgan',createdAt:at});
+          log(state,'sales','Alex joined the restock waitlist',`${product.name} · Customer asked to be notified in the shop.`);
+        }
+        if(incoming?.notifiedAt && expected && !(state.customerNotifications??[]).some(n=>n.purchaseId===incoming.id&&n.customer==='Alex Morgan')) {
+          state.customerNotifications ??= [];
+          state.customerNotifications.push({id:randomUUID(),productId:product.id,purchaseId:incoming.id,customer:'Alex Morgan',expectedAt:expected,at,text:`Good news! The ${product.name} (${product.variant}) restock is expected on ${dateLabel}. The shop has confirmed this update. We’ll let you know when it’s ready to order.`});
+        }
+        reply = dateLabel ? `You’re on the waitlist. The supplier-confirmed restock is expected on ${dateLabel}. We’ll update you here when it’s ready to order.` : 'You’re on the waitlist! We’ll notify you here as soon as the supplier confirms a restock date. The shop team can see your request.';
+      } else if ((mentionsHoodie || /\b(the item|one|it)\b/.test(normalized)) && (wantsOrder || /\b(can|could) i have\b/.test(normalized))) {
         // Quantities must modify the product, never an age, price or order number elsewhere in the sentence.
         const match = normalized.match(/(?:^|\s)(-?\d+(?:\.\d+)?|one|two|three|four|five|six|seven|eight|nine|ten)\s+(?:of\s+the\s+)?(?:(?:medium|m|washed|black|washed-black|everyday)\s+)*hoodies?\b/);
         const words: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
@@ -105,17 +123,18 @@ export function transition(original: ShopState, action: Action): ShopState {
         product.demand += interest;
         reply = reserved ? `I’ve reserved ${reserved} medium washed-black hoodie${reserved > 1 ? 's' : ''} for you (${money(reserved * product.price)}).` : 'The medium washed-black hoodie is currently out of stock.';
         if (shortage) {
-          reply += ` We’re ${shortage} short of your request. I’ve recorded ${interest} unit${interest > 1 ? 's' : ''} of interest for the stock manager${shortage > interest ? ' (the per-message limit is 10)' : ''}. I’ll only promise a restock date once a supplier confirms it.`;
+          reply += ` We’re ${shortage} short of your request. I’ve recorded ${interest} unit${interest > 1 ? 's' : ''} of interest for the stock manager${shortage > interest ? ' (the per-message limit is 10)' : ''}. Would you like me to notify you here when we have a confirmed restock date?`;
+          if(dateLabel)reply += ` The supplier-confirmed restock is expected on ${dateLabel}.`;
           log(state, 'sales', 'A customer request became a stock signal', `${interest} unfulfilled unit${interest > 1 ? 's' : ''} added to demand. Enquiries are separate from paid orders.`);
         }
         if (reserved) reply += ' This is a demo reservation; no payment has been taken.';
       } else if (/\b(delivery|shipping|arrive|when)\b/.test(normalized)) {
-        reply = 'Restock timing depends on supplier confirmation. The current demo quotes range from 2 to 8 days; I won’t promise a delivery date before it’s confirmed.';
+        reply = dateLabel ? `The supplier-confirmed restock is expected on ${dateLabel}. It’s still incoming, so it isn’t ready to buy yet. Would you like a notification here?` : 'Restock timing depends on supplier confirmation. The current demo quotes range from 2 to 8 days; I won’t promise a delivery date before it’s confirmed.';
       } else if (mentionsHoodie || /\b(stock|available|price)\b/.test(normalized)) {
         const left = available(product);
         reply = left > 0
           ? `The Everyday Hoodie in washed black / medium is ${money(product.price)}. There ${left === 1 ? 'is' : 'are'} ${left} available right now. You can ask “Reserve one medium black hoodie”.`
-          : `The Everyday Hoodie in washed black / medium is ${money(product.price)}, but it’s sold out right now. Ask me to reserve one and I’ll record your interest for the restock.`;
+          : `The Everyday Hoodie in washed black / medium is ${money(product.price)}, but it’s sold out right now. Would you like me to notify you here when we have a confirmed restock date?`;
       } else {
         reply = 'I can help with the Everyday Hoodie: availability, reserving medium washed-black hoodies, or restock timing. This is a guided sample-store demo.';
       }
@@ -146,11 +165,37 @@ export function transition(original: ShopState, action: Action): ShopState {
       const quote = state.quotes.find(q => q.id === action.quoteId);
       if (!quote) throw new Error('Supplier quote not found.');
       if (!Number.isInteger(action.quantity) || action.quantity < quote.minimum || action.quantity > 500) throw new Error(`Quantity must be between ${quote.minimum} and 500.`);
-      const total = quote.unitCost * action.quantity + quote.shipping;
-      const purchase = { id: `PO-${1001 + state.purchases.length}`, productId: product.id, quoteId: quote.id, quantity: action.quantity, total, status: 'ordered' as const, createdAt: new Date().toISOString() };
+      const unitCost = action.negotiatedUnitCost ?? quote.unitCost;
+      if (!Number.isInteger(unitCost) || unitCost < 1 || unitCost > quote.unitCost) throw new Error('Negotiated unit price must be positive whole pence and no higher than the quote.');
+      if (action.negotiatedUnitCost !== undefined) {
+        const reason = rejectionReason({ unitCost, quantity: action.quantity }, quote.unitCost, Math.max(20, product.demand, quote.minimum));
+        if (reason) throw new Error(`Supplier declined: ${reason} Use the original quote.`);
+      }
+      const total = unitCost * action.quantity + quote.shipping;
+      const purchase = { id: `PO-${1001 + state.purchases.length}`, productId: product.id, quoteId: quote.id, quantity: action.quantity, unitCost, total, status: 'ordered' as const, createdAt: new Date().toISOString(), expectedAt: new Date(Date.now() + quote.leadDays * 86400000).toISOString() };
       state.purchases.push(purchase);
       state.proposalReady = false;
       log(state, 'merchant', `${purchase.id} approved · ${money(total)}`, `${action.quantity} hoodies from ${quote.supplier}. Recorded in the demo supplier portal; no external purchase placed. Stock remains incoming.`);
+      break;
+    }
+    case 'notify_waitlist': {
+      const purchase=state.purchases.find(p=>p.id===action.purchaseId);
+      const quote=state.quotes.find(q=>q.id===purchase?.quoteId);
+      if(purchase&&!purchase.expectedAt&&quote)purchase.expectedAt=new Date(Date.parse(purchase.createdAt)+quote.leadDays*86400000).toISOString();
+      if(!purchase||purchase.status!=='ordered'||!purchase.expectedAt)throw new Error('A confirmed incoming restock date is required before notifying customers.');
+      if(purchase.notifiedAt)return original;
+      const item=state.products.find(p=>p.id===purchase.productId)!;
+      const at=new Date().toISOString();
+      const date=new Date(purchase.expectedAt).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'});
+      state.customerNotifications ??= [];
+      for(const subscriber of state.restockSubscriptions??[]) {
+        if(subscriber.productId!==item.id)continue;
+        const text=`Good news! Your ${item.name} (${item.variant}) restock is expected on ${date}. The supplier has confirmed the date. We’ll let you know when it’s ready to order.`;
+        state.customerNotifications.push({id:randomUUID(),productId:item.id,purchaseId:purchase.id,customer:subscriber.customer,text,expectedAt:purchase.expectedAt,at});
+        state.messages.push({id:randomUUID(),sender:'sales',text,at});
+      }
+      purchase.notifiedAt=at;
+      log(state,'merchant','Restock update delivered to the customer shop',`${item.name} · Expected ${date}. In-app demo notification; no external email sent.`);
       break;
     }
     case 'request_cancel':

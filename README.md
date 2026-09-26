@@ -1,4 +1,4 @@
-# Shopkeeper
+# ShpKpr
 
 A merchant workspace connecting customer requests, inventory shortages, supplier research and restock approval from a phone. Built for the Merchant Tooling hackathon track.
 

@@ -9,15 +9,15 @@ import { clock } from './utils';
 
 // Every prompt here is one the scripted customer_message workflow in lib/engine.ts answers.
 const PROMPTS = [
-  'Is the medium washed-black hoodie in stock?',
-  'Reserve one medium washed-black hoodie',
+  'Can I have a medium washed-black hoodie?',
+  'Yes please, notify me when the hoodie is back',
   'When will the hoodie be restocked?',
 ];
 
 const SENDER: Record<Message['sender'], string> = {
   customer: 'Alex (you)',
   sales: 'Shop assistant',
-  merchant: 'North & Form team',
+  merchant: 'Fleek 0.5 team',
   stock: 'Stock manager',
 };
 
@@ -59,7 +59,17 @@ export default function AssistantPanel({ state, outgoing, error, replyOrders, on
       </div>
       <span className={styles.guided}>Guided demo</span>
     </header>
-    <p className={styles.panelNote}>Scripted replies for the Everyday Hoodie, backed by live stock records. Every message appears in the merchant’s inbox.</p>
+    <p className={styles.panelNote}>Ask for an item, join its restock waitlist, and receive the confirmed date here. The shop team sees this same conversation.</p>
+
+    <section className={styles.restockUpdates} aria-label="Restock notifications" aria-live="polite">
+      <h3>Your restock updates</h3>
+      {(state.customerNotifications??[]).filter(n=>n.customer==='Alex Morgan').slice(-3).reverse().map(n=>{
+        const purchase=state.purchases.find(p=>p.id===n.purchaseId);
+        return <article key={n.id}><strong>{purchase?.status==='cancelled'?'Restock delayed':purchase?.status==='received'?'Back in stock':`Expected ${new Date(n.expectedAt).toLocaleDateString('en-GB',{day:'numeric',month:'long',timeZone:'UTC'})}`}</strong><p>{purchase?.status==='cancelled'?'This delivery was cancelled. You’re still on the waitlist; we’ll update you when a new date is confirmed.':purchase?.status==='received'?'The delivery has arrived. Ask the assistant to reserve your item.':n.text}</p></article>;
+      })}
+      {!(state.customerNotifications??[]).some(n=>n.customer==='Alex Morgan')&&<p>{(state.restockSubscriptions??[]).some(s=>s.customer==='Alex Morgan')?'You’re on the waitlist. Your confirmed restock date will appear here once the shop sends your update.':'Join the waitlist in chat to receive a restock notification here.'}</p>}
+      <a href="/">See the business side →</a>
+    </section>
 
     <ol className={styles.thread} ref={threadRef} aria-live="polite" aria-label="Conversation">
       {messages.map(m => {

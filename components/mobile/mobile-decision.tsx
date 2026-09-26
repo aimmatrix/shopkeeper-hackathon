@@ -181,7 +181,7 @@ export default function MobileDecision() {
       {error && <p className={styles.error} role="alert"><CircleAlert size={16} aria-hidden /><span>{error}</span></p>}
 
       <section className={styles.brief} aria-labelledby="brief-title">
-        <p className={styles.kicker}>NORTH &amp; FORM · {kickerDate(new Date())}</p>
+        <p className={styles.kicker}>FLEEK 0.5 · {kickerDate(new Date())}</p>
         <h1 id="brief-title" className={styles.headline}>{headline}</h1>
         <dl className={styles.stats}>
           <div><dt>DEMO SALES</dt><dd>{money(paid)}</dd></div>
@@ -363,7 +363,7 @@ function Strip() {
 function TopBar({ version }: { version?: number }) {
   return <header className={styles.top}>
     <Link href="/" className={styles.back}><ArrowLeft size={18} aria-hidden /><span>Desktop</span></Link>
-    <span className={styles.brand}><Mark />shopkeeper</span>
+    <span className={styles.brand}><Mark />ShpKpr</span>
     <span className={styles.sync} title="Refreshes every 5 seconds">{version === undefined ? 'Connecting' : <><i aria-hidden /> Live · v{version}</>}</span>
   </header>;
 }

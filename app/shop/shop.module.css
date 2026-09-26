@@ -1,4 +1,4 @@
-/* North & Form sample storefront. Scoped to /shop; uses the Shopkeeper tokens (--sk-*) from app/globals.css. */
+/* Fleek 0.5 sample storefront. Scoped to /shop; uses the ShpKpr tokens (--sk-*) from app/globals.css. */
 .page {
   min-height: 100vh;
   background: var(--sk-cream);
@@ -231,3 +231,9 @@
 @media (prefers-reduced-motion: reduce) {
   .msg, .typing span, .seal[data-flash], .cardSvg { animation: none; transition: none; }
 }
+
+.restockUpdates { margin: 12px 18px; padding: 16px; background: #f0f4e8; border: 1px solid #d5dfc6; border-radius: 12px; }
+.restockUpdates h3 { font-size: 14px; margin-bottom: 8px; }
+.restockUpdates p { font-size: 12px; line-height: 1.6; color: #536048; }
+.restockUpdates strong { display: block; font-size: 15px; margin: 8px 0; }
+.restockUpdates a { display: inline-block; margin-top: 10px; font-size: 12px; text-decoration: underline; }

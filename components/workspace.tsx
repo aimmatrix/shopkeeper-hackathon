@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Action, ShopState, Purchase } from '@/lib/types';
+import type { Action, ShopState } from '@/lib/types';
 import { available } from '@/lib/types';
 import { Mark, type Dash, type View } from './dashboard/shared';
 import { Today } from './dashboard/today';
@@ -14,7 +14,6 @@ const nav: { id: View; label: string }[] = [{ id: 'today', label: 'Dashboard' },
 const SEEN_KEY = 'shopkeeper.inbox.seen';
 
 export default function Workspace() {
-  const [demoPurchases, setDemoPurchases] = useState<Purchase[]>([]);
   const [chatProduct, setChatProduct] = useState<string | null>(null);
   const [openedChats, setOpenedChats] = useState<string[]>([]);
   const [demoRun, setDemoRun] = useState(0);
@@ -64,7 +63,7 @@ export default function Workspace() {
     finally { setBusy(false); }
   }
 
-  const displayState = state ? { ...state, purchases: [...state.purchases, ...demoPurchases] } : null;
+  const displayState = state;
   const product = state?.products[0];
   const incoming = displayState?.purchases.filter(p => p.productId === product?.id && ['ordered', 'cancellation_requested'].includes(p.status)).reduce((sum, p) => sum + p.quantity, 0) ?? 0;
   const paid = state?.orders.filter(o => o.status === 'paid').reduce((sum, o) => sum + o.total, 0) ?? 0;
@@ -105,7 +104,7 @@ export default function Workspace() {
     await act({ type: 'confirm_cancel', purchaseId: open.id }, `${open.id} cancelled. Nothing is on the way.`);
   }
   async function reset() {
-    if (await act({ type: 'reset' }, 'Sample store reset to its starting point.')) { setDemoPurchases([]); setOpenedChats([]); setChatProduct(null); setDemoRun(n => n + 1); setResetConfirm(false); setMenu(false); setSelected('north'); setQuantity(20); appliedReport.current = null; go('today'); }
+    if (await act({ type: 'reset' }, 'Sample store reset to its starting point.')) { setOpenedChats([]); setChatProduct(null); setDemoRun(n => n + 1); setResetConfirm(false); setMenu(false); setSelected('north'); setQuantity(20); appliedReport.current = null; go('today'); }
   }
 
   const dash: Dash | null = state && product && quote ? {
@@ -120,7 +119,7 @@ export default function Workspace() {
 
     <header className="sk-header">
       <div className="sk-header-left">
-        <button className="sk-brand" onClick={() => go('today')} aria-label="Shopkeeper, go to Today"><Mark /><span>shopkeeper</span></button>
+        <button className="sk-brand" onClick={() => go('today')} aria-label="ShpKpr, go to Today"><Mark /><span>ShpKpr</span></button><a href="/shop" className="sk-text-link">Customer shop ↗</a>
         <nav aria-label="Main" className="sk-nav">
           {nav.map(item => <button key={item.id} aria-current={view === item.id ? 'page' : undefined} aria-label={item.id === 'inbox' && unread > 0 ? `Inbox, ${unread} unread` : undefined} className={view === item.id ? 'active' : ''} onClick={() => go(item.id)}>
             {item.label}{item.id === 'inbox' && unread > 0 && <span className="sk-badge" aria-hidden="true">{unread}</span>}
@@ -130,7 +129,7 @@ export default function Workspace() {
       <div className="sk-store" ref={menuRef}>
         {state?.paused && <span className="sk-chip coral">PAUSED</span>}
         <button className="sk-store-button" aria-haspopup="menu" aria-expanded={menu} onClick={() => { setMenu(m => !m); setResetConfirm(false); }}>
-          <span className="sk-store-name">North &amp; Form</span><span className="sk-monogram">NF</span>
+          <span className="sk-store-name">Fleek 0.5</span><span className="sk-monogram">F</span>
         </button>
         {menu && <div className="sk-menu" role="menu">
           {state && <button role="menuitem" disabled={busy} onClick={async () => { await act({ type: 'toggle_pause' }, state.paused ? 'Workflow resumed.' : 'Workflow paused. Customer replies and restocks are on hold.'); setMenu(false); }}>{state.paused ? 'Resume workflow' : 'Pause workflow'}</button>}
@@ -148,7 +147,7 @@ export default function Workspace() {
       {error && <div className="sk-alert error" role="alert"><span>{error}</span><button className="sk-text-link" onClick={() => setError('')}>Dismiss</button></div>}
       {!dash ? <p className="sk-loading" role="status">{offline ? 'Couldn’t reach the store. Retrying…' : 'Loading your store…'}</p> : <>
         {view === 'today' && <Today {...dash} />}
-        {openedChats.map(id => { const item = state?.products.find(p => p.id === id); return item ? <div key={`${demoRun}-${id}`} hidden={view !== 'inbox' || chatProduct !== id}>{<DemoInbox d={dash} product={item} active={view === 'inbox' && chatProduct === id} onOrdered={purchase => setDemoPurchases(current => current.some(p => p.productId === purchase.productId) ? current : [...current, purchase])} />}</div> : null; })}
+        {openedChats.map(id => { const item = state?.products.find(p => p.id === id); return item ? <div key={`${demoRun}-${id}`} hidden={view !== 'inbox' || chatProduct !== id}>{<DemoInbox d={dash} product={item} active={view === 'inbox' && chatProduct === id} />}</div> : null; })}
         {view === 'stock' && <StockView {...dash} />}
       </>}
     </main>
