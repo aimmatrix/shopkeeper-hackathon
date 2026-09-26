@@ -51,10 +51,10 @@
 
 /* Hero */
 .heroArt { position: relative; aspect-ratio: 4 / 5; border-radius: 8px; overflow: hidden; background: var(--sk-cream); display: grid; place-items: center; }
-.plate { position: absolute; top: 16px; left: 16px; padding: 5px 10px; border-radius: 4px; background: var(--sk-accent); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.plate { z-index: 2; pointer-events: none; position: absolute; top: 16px; left: 16px; padding: 5px 10px; border-radius: 4px; background: var(--sk-accent); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .heroSvg { width: 74%; height: auto; }
-.seal { position: absolute; right: 16px; bottom: 16px; min-width: 84px; padding: 12px 14px; border-radius: 8px; background: var(--sk-ink); color: #fff; display: flex; flex-direction: column; align-items: center; text-align: center; }
-.seal strong { font-size: 36px; font-weight: 900; line-height: 1; letter-spacing: -.04em; color: var(--sk-accent); font-variant-numeric: tabular-nums; }
+.seal { z-index: 2; pointer-events: none; position: absolute; right: 12px; bottom: 90px; min-width: 64px; padding: 12px 14px; border-radius: 8px; background: var(--sk-ink); color: #fff; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.seal strong { font-size: 26px; font-weight: 900; line-height: 1; letter-spacing: -.04em; color: var(--sk-accent); font-variant-numeric: tabular-nums; }
 .seal span { margin-top: 4px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .seal[data-flash] { animation: pop .6s cubic-bezier(.22, 1, .36, 1); }
 @keyframes pop { 40% { transform: scale(1.1); } }
@@ -149,12 +149,12 @@
 .sectionHead .eyebrow { grid-column: 1 / -1; margin-bottom: 0; }
 .sectionHead h2 { font-size: 40px; line-height: 1.05; letter-spacing: -.035em; }
 .sectionHead p:last-child { font-size: 14px; line-height: 1.55; color: var(--sk-muted); max-width: 440px; }
-.grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); gap: 20px; }
 .card { display: flex; flex-direction: column; background: #fff; border-radius: 12px; padding: 14px 14px 18px; }
 .cardArt { position: relative; aspect-ratio: 4 / 5; border-radius: 8px; overflow: hidden; display: grid; place-items: center; background: var(--sk-cream); }
 .cardSvg { width: 74%; height: auto; transition: transform .4s cubic-bezier(.22, 1, .36, 1); }
 .card:hover .cardSvg { transform: scale(1.04); }
-.cardIndex { position: absolute; top: 12px; left: 12px; font-size: 12px; font-weight: 800; letter-spacing: .12em; color: var(--sk-muted); }
+.cardIndex { z-index: 2; pointer-events: none; position: absolute; top: 12px; left: 12px; font-size: 12px; font-weight: 800; letter-spacing: .12em; color: var(--sk-muted); }
 .cardTitle { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-top: 14px; padding: 0 4px; }
 .cardTitle h3 { font-size: 18px; letter-spacing: -.02em; }
 .cardTitle span { font-size: 16px; font-weight: 800; }
@@ -200,7 +200,7 @@
   .hero { grid-template-columns: 1fr; gap: 20px; padding: 12px; }
   .heroArt { aspect-ratio: 1 / 1; }
   .heroSvg { width: 66%; }
-  .seal { min-width: 72px; padding: 10px 12px; right: 12px; bottom: 12px; }
+  .seal { min-width: 72px; padding: 10px 12px; right: 12px; bottom: 90px; }
   .seal strong { font-size: 30px; }
   .plate { top: 12px; left: 12px; }
   .heroCopy { padding: 0 6px 8px; }

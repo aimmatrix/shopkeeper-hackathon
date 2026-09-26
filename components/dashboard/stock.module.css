@@ -1,0 +1,26 @@
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
+.product { min-width: 0; overflow: hidden; border: 1px solid #e8e8e2; border-radius: 16px; background: #fff; animation: appear .4s ease-out both; }
+.model { height: 360px; }
+.details { padding: 22px 24px 0; }
+.heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.heading h2 { font-size: 18px; font-weight: 600; line-height: 1.3; letter-spacing: -.03em; }
+.heading p { margin: 6px 0 0; font-size: 11px; color: #808078; }
+.status { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; padding: 6px 8px; border-radius: 6px; font-size: 10px; color: #557149; background: #f0f4ec; }
+.status i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.status[data-tone='incoming'] { color: #947527; background: #fbf6e7; }
+.status[data-tone='low'] { color: #a3663d; background: #fbf0e8; }
+.counts { display: grid; grid-template-columns: repeat(3, 1fr); margin: 24px 0; }
+.counts > div + div { border-left: 1px solid #eeeeea; padding-left: 20px; }
+.counts dt { color: #777970; font-size: 11px; }
+.counts dd { margin: 7px 0 0; font-size: 27px; line-height: 1; font-weight: 500; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+.footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid #eeeeea; min-height: 56px; }
+.footer p { font-size: 10px; color: #7a7c73; line-height: 1.5; }
+.footer button { min-height: 44px; flex-shrink: 0; font-size: 11px; font-weight: 600; transition: color .2s; }
+.footer button:hover { color: #657a4e; }
+.footer button span { margin-left: 7px; }
+.footer button:focus-visible { outline: 2px solid #657a4e; outline-offset: 3px; border-radius: 3px; }
+@keyframes appear { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+@media (min-width: 1450px) { .model { height: 400px; } }
+@media (max-width: 1000px) { .heading { flex-direction: column; } }
+@media (max-width: 650px) { .grid { grid-template-columns: 1fr; gap: 20px; } .model { height: 340px; } .details { padding: 20px 20px 0; } .heading { flex-direction: row; flex-wrap: wrap; } }
+@media (prefers-reduced-motion: reduce) { .product { animation: none; } .footer button { transition: none; } }

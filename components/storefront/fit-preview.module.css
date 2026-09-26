@@ -1,0 +1,25 @@
+.trigger { display: inline-flex; gap: 5px; align-items: center; justify-content: center; padding: 5px 12px; border: 1px solid #bac5ad; border-radius: 20px; background: #f8faef; color: #36432d; font-size: 11px; font-weight: 700; min-height: 28px; }
+.trigger:hover { background: #e0e8d4; }
+.dialog { position: fixed; inset: 0; margin: auto; width: min(800px,94vw); max-height: 94svh; overflow: auto; padding: 0; border: 1px solid #d8dfcd; border-radius: 18px; background: #f5f5ed; color: #273023; box-shadow: 0 30px 100px #101a1655; }
+.dialog::backdrop { background: #182319b8; backdrop-filter: blur(8px); }
+.header { padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.header span { font-size: 10px; letter-spacing: .14em; }
+.header h2 { font-size: 23px; margin: 4px 0 0; }
+.header button { border: 1px solid #cbd2c2; border-radius: 24px; padding: 10px 14px; min-height: 44px; font-size: 12px; }
+.scene { position: relative; height: min(57svh,560px); min-height: 260px; background: radial-gradient(ellipse at 45% 35%,#fffdf6,#eceee2); }
+.canvas { position: absolute; inset: 0 0 25px; cursor: grab; touch-action: none; }
+.canvas:active { cursor: grabbing; }
+.canvas canvas { display: block; width: 100%; height: 100%; }
+.badge { position: absolute; top: 18px; left: 24px; font-size: 9px; letter-spacing: .12em; z-index: 1; pointer-events: none; color: #6c7560; }
+.hint { position: absolute; bottom: 8px; width: 100%; text-align: center; font-size: 10px; color: #68705f; pointer-events: none; }
+.zoom { position: absolute; right: 18px; bottom: 40px; display: flex; gap: 4px; }
+.zoom button { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: #ffffffe0; border: 1px solid #dce1d2; }
+.actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; padding: 16px 12px 5px; }
+.actions button { padding: 9px 16px; min-height: 40px; border: 1px solid #cdd4c3; border-radius: 22px; font-size: 12px; }
+.actions button[aria-pressed=true] { background: #33452b; color: white; border-color: #33452b; }
+.dialog button:disabled { opacity: .4; }
+.dialog button:focus-visible,.trigger:focus-visible,.canvas:focus-visible { outline: 2px solid #536346; outline-offset: 3px; }
+.note { font-size: 11px; line-height: 1.7; padding: 10px 18px 16px; color: #65705b; text-align: center; }
+.note a { text-decoration: underline; text-underline-offset: 3px; }
+.message { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 15px; justify-content: center; align-items: center; font-size: 14px; }
+.message button { border: 1px solid #bbc7b0; border-radius: 20px; padding: 8px 15px; }

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, LoaderCircle, Minus, Plus, RefreshCw } from 'lucide-react';
 import type { Action, Product, ShopState } from '@/lib/types';
 import { available, money } from '@/lib/types';
-import ProductArt from '@/components/product-art';
+import ProductViewer from './product-viewer';
 import styles from '@/app/shop/shop.module.css';
 import AssistantPanel from './assistant-panel';
 import { newEventId } from './utils';
@@ -171,7 +171,7 @@ export default function Storefront() {
             return <li key={product.id} className={styles.card}>
               <div className={styles.cardArt}>
                 <span className={styles.cardIndex}>{String(i + 2).padStart(2, '0')}</span>
-                <ProductArt kind={product.kind} className={styles.cardSvg} />
+                <ProductViewer product={product} />
               </div>
               <div className={styles.cardTitle}><h3>{product.name}</h3><span>{money(product.price)}</span></div>
               <p className={styles.cardVariant}>{colour}{size ? ` · ${size}` : ''}</p>
@@ -220,7 +220,7 @@ function Hero({ product, flashed, busy, paused, onReserve }: { product: Product;
   return <section className={styles.hero} id="top" aria-labelledby="hero-title">
     <div className={styles.heroArt}>
       <span className={styles.plate}>No. 01 — Bestseller</span>
-      <ProductArt kind={product.kind} className={styles.heroSvg} />
+      <ProductViewer product={product} />
       <div className={styles.seal} data-flash={flashed || undefined} aria-hidden>
         <strong>{Math.max(left, 0)}</strong><span>left in {size}</span>
       </div>

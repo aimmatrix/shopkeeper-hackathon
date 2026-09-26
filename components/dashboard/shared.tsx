@@ -15,6 +15,7 @@ export type Dash = {
   quantity: number;
   busy: boolean;
   go: (view: View) => void;
+  startRestock: (productId: string) => void;
   act: (action: Action, success?: string) => Promise<boolean>;
   approve: () => Promise<void>;
   openSuppliers: () => Promise<void>;

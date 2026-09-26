@@ -1,0 +1,29 @@
+.viewer { position: relative; width: 100%; height: 100%; min-height: 250px; background: radial-gradient(ellipse at 45% 35%, #fffdf6 0%, #eeeee5 65%, #e1e5d8 100%); isolation: isolate; }
+.viewer::after { content: ''; position: absolute; bottom: 23%; left: 25%; width: 50%; height: 5%; border-radius: 50%; background: #46513e; filter: blur(14px); opacity: .14; z-index: -1; pointer-events: none; }
+.badge { position: absolute; top: 15px; right: 14px; color: #626c5c; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; pointer-events: none; z-index: 1; }
+.stage { position: absolute; inset: 32px 0 105px; cursor: grab; touch-action: pan-y; border-radius: 8px; }
+.stage:active { cursor: grabbing; }
+.stage:focus-visible { outline: 2px solid #566644; outline-offset: -4px; }
+.stage canvas { display: block; width: 100%; height: 100%; }
+.fallback { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f0f0e8; }
+.fallback svg { width: 65%; height: 80%; }
+.fallback span { font-size: 11px; text-align: center; color: #636b5d; }
+.bottom { position: absolute; bottom: 12px; inset-inline: 8px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.bottom p { font-size: 10px; color: #68705f; text-align: center; margin: 0; }
+.tools { display: flex; gap: 3px; padding: 3px; background: #ffffffd9; border: 1px solid #fff; border-radius: 30px; box-shadow: 0 3px 12px #39452b0c; }
+.tools button { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: #343e2c; }
+.tools button:hover:not(:disabled) { background: #e0e8d4; }
+.tools button:disabled { opacity: .35; }
+.tools button:focus-visible, .dialog button:focus-visible { outline: 2px solid #536346; outline-offset: 2px; }
+.dialog { position: fixed; inset: 0; margin: auto; width: min(800px,94vw); max-height: 94svh; padding: 0; border: 1px solid #e0e4d8; border-radius: 16px; color: #273023; background: #f4f5ee; box-shadow: 0 30px 100px #101a1655; }
+.dialog::backdrop { background: #182319aa; backdrop-filter: blur(8px); }
+.dialog header { padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.dialog header span { font-size: 10px; letter-spacing: .12em; }
+.dialog h2 { font-size: 24px; margin: 4px 0 0; }
+.dialog header button { min-height: 44px; padding: 8px 12px; border: 1px solid #cbd2c2; border-radius: 24px; font-size: 12px; }
+.viewer[data-expanded] { height: min(65svh,620px); min-height: 260px; }
+.viewer[data-expanded] .stage { touch-action: none; }
+.note { text-align: center; padding: 12px; font-size: 12px; color: #606957; }
+
+.srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.note a { text-underline-offset: 3px; }

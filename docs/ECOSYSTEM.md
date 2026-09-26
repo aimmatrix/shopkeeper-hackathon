@@ -1,61 +1,51 @@
-# Shopkeeper ecosystem: demand to replenishment to recovery
+# Shopkeeper ecosystem
 
-## Product decision
-Keep one merchant operating workspace. Extend the working stock flow with WhatsApp intake and a second GrokBot responsible for sales recovery. Fleek-inspired design remains with the user's Claude session. Branding alone is not a Fleek integration.
+## Current product
+One shared merchant workspace connects customer interest, inventory, a stock recommendation and a recovery draft. The user's Claude session owns the Fleek-inspired main frontend; primary Codex owns these integrations. Branding alone is not a Fleek integration.
 
-## Roles
-- **Wassist / WhatsApp:** customer-facing channel. Inbound messages, product questions and reply delivery. Its agent or our handler must read current inventory rather than answer from a stale uploaded catalogue.
-- **GrokBot Stock Manager:** existing working browser handoff. Evaluates stock shortages and supplier quotes; saves a recommendation. Merchant approval creates a demo purchase.
-- **GrokBot Sales & Recovery Manager:** reviews actual unfulfilled requests, matches them to available inventory, and prepares relevant follow-up drafts and next actions. Incoming inventory is not available inventory. Sends no external messages without explicit approval and channel setup.
-- **Merchant:** approves spending from `/mobile` and reviews outward-facing drafts.
-- **Supabase:** shared records and action history, including provenance and duplicate-event protection.
-- **Tavily:** live supplier research with source evidence; discovered pages are not verified quotes.
+Public demo: https://shopkeeper-hackathon.vercel.app  
+Recovery Desk: https://shopkeeper-hackathon.vercel.app/recovery  
+Phone approval: https://shopkeeper-hackathon.vercel.app/mobile
 
-## Main demo
-1. A tester asks for a product on WhatsApp via the Wassist sandbox.
-2. The request reaches the shared store; only actual available stock can be reserved.
-3. Stock Manager reviews the shortage and recommends a supplier with full landed cost.
-4. Merchant approves the sample restock from a phone.
-5. After demo delivery is confirmed, Sales & Recovery Manager prepares a follow-up for the recorded unfulfilled request.
-6. The merchant reviews the message; a sandbox reply closes the loop only after test-conversation delivery is authorized and implemented.
+## Roles and verified behavior
+- **Wassist WhatsApp Concierge:** calls the live catalogue before factual stock/price answers. With explicit permission, its second tool records an exact product and quantity in the shared database. This records interest, not a reservation or notification subscription.
+- **GrokBot Stock Manager:** uses `/agent` to compare sample suppliers and save a recommendation. Its verified recommendation is 20 hoodies from North Thread for £452 including shipping. Only the merchant approves the demo purchase.
+- **GrokBot Sales & Recovery Manager:** reads `/recovery`, chooses an actual request, and saves a follow-up draft plus rationale through the browser handoff. The form does not authenticate authorship; proof that GrokBot performed the action comes from the observed bot session and matching saved record.
+- **Merchant:** approves sample spending on `/mobile`; reviews recovery drafts when inventory permits. “Reviewed” does not mean “sent.”
+- **Supabase:** shared inventory, requests, drafts and action history, with optimistic version writes.
+- **Tavily:** live supplier discovery with source evidence. Discovered pages are not verified offers.
 
-Steps 2–6 involving WhatsApp writes or recovery remain proposed. Wassist now answers product questions through the live catalogue; its direct reservations and recovery messaging are not implemented.
+## Verified walkthrough
+1. Wassist internal test #2 asked to record interest in two medium washed-black Everyday Hoodies.
+2. The managed agent called the live catalogue, then `shopkeeper_record_interest`. It saved request `7546f60725349ba3f3516952`. The deployed Recovery Desk showed 1 available, 0 incoming and £136 potential value. No payment or reservation occurred.
+3. The second GrokBot read the public recovery page and saved a draft and rationale. The page confirmed persistence and showed “Awaiting merchant review · not sent.” Review caught an invented customer name, which was corrected and re-saved through GrokBot. The verified draft now starts “Hi there”; its rationale explicitly says customer identity is unspecified. GrokBot also saved the standing rule not to infer names from other records.
+4. A separate request starting `059aa66b` was created using **Add sample request** to verify the clearly labelled rehearsal fallback. It is not a real customer or a Wassist call.
 
-## Scope
-The next priority is one working inbound WhatsApp conversation tied to the existing stock workflow. A second agent must produce a stored, reviewable recovery plan rather than duplicate the WhatsApp chatbot. Defer general-purpose marketing, refunds, accounting and multi-channel inboxes until the core loop works.
+The Wassist tests were internal simulated conversations. They prove managed agent → authenticated endpoint → Supabase → merchant view. Physical WhatsApp testing remains with the user; do not claim an actual customer or phone test until confirmed.
 
-Fleek-specific sourcing can later describe bundles, condition/grade, size mixes and landed cost. Existing medium-black hoodie quotes are a sample retail scenario; they are not authentic Fleek listings. Do not imply that buying a vintage bundle guarantees interchangeable sizes or condition.
+## Try it on a phone
+Open https://wa.me/447424845871?text=/connect:d289040e-b827-44f4-98e9-eba4783ebd69 and send the prefilled connection message. Ask for live stock, then explicitly say: “Please record my interest in two Everyday Hoodies in washed black, medium, for merchant review.” The request should appear at `/recovery` within five seconds.
 
-## Integration prerequisites
-Wassist account/sandbox access and developer configuration. The official documentation supports a shared test number and managed-agent or signed-webhook routing. Verify the exact webhook signature and message schemas before implementing an adapter. Use event IDs for duplicate delivery, separate contact/conversation identities, and never route all WhatsApp users into Alex Morgan's guided demo identity.
+## Technical boundaries
+- `GET /api/catalogue` returns customer-safe product facts and policies, without messages, orders, supplier costs or channel identities.
+- `POST /api/wassist/requests` requires a dedicated server-held bearer token plus Wassist's injected contact/conversation headers. The language model does not choose contact identity. IDs are HMAC-pseudonymised before persistence; no phone numbers or message transcripts are stored.
+- Repeating the same contact/product/quantity returns the existing request without increasing demand. A different quantity on an existing request requires merchant review rather than silently inflating demand.
+- Recovery data lives in the existing approved demo state; no new Supabase tables were needed. Old states without `stockRequests` remain compatible.
+- The generic store endpoint rejects recovery actions; dedicated routes assign identity and provenance.
+- Draft review requires sufficient current stock and rejects changes since drafting. Incoming stock is excluded. Multiple requests may refer to the same available units because they are expressions of interest, not allocations; future sending/reservation must recheck inventory.
+- The public merchant demo is intentionally shared and login-free. Same-origin checks are CSRF protection, not merchant authentication. Do not use it for real customer data.
+- `WASSIST_API_KEY` stays in ignored `.env.local`. The generated `WASSIST_TOOL_TOKEN` is configured in the existing Vercel project and the scoped Wassist tool. Neither is a frontend variable. Agent metadata is ignored under `.data/`.
+- The user explicitly approved the public demo after the earlier protection change. Vercel Standard Protection leaves the production alias public and protects previews/generated deployment URLs. All Deployments protection would break the catalogue and request tools.
 
-Public webhooks cannot rely on a temporary Vercel browser share cookie. Provide a reachable, authenticated webhook endpoint before subscribing Wassist. Keep all service keys on the server. Do not change an existing business number's routing; use the hackathon sandbox/test conversation only.
+## What remains unimplemented
+Direct WhatsApp reservations, live payments, supplier communication, Instagram, scheduled recovery sending and automatic triggering between GrokBots are not connected. Checkout, purchases and receipt are simulated. The next product decision is whether to add an explicit merchant-approved reply to the tester's sandbox conversation; this requires confirmed phone routing and a separate sending action.
 
-## Current verified foundation
-Supabase persistence, stock reservations, supplier comparisons, Tavily web evidence, GrokBot stock recommendation and mobile demo approvals work. Checkout, supplier orders and delivery are simulated. No real supplier communication, Instagram connection or live payments are configured.
+Fleek-specific sourcing can later describe bundles, grades, size mixes and landed cost. Existing medium-black hoodie quotes are samples, not authentic Fleek listings.
 
-## Official sources
-- https://wassist.app/
-- https://docs.wassist.app/
+## Checks
+83 tests passed, including identity separation, duplicate requests, quantity bounds, pause, incoming inventory, draft persistence, stale review and authentication. Typecheck and production build passed. Live testing verified both Wassist tools, public recovery rendering, saved GrokBot draft and 401 rejection of an unauthenticated tool write.
+
+## Official references
 - https://docs.wassist.app/quickstart
+- https://docs.wassist.app/guides/configure-tools
 - https://support.joinfleek.com/hc/en-us/articles/10147758542747-What-is-Fleek
-
-## Setup progress
-The user supplied a Wassist API key, stored only in ignored `.env.local` as `WASSIST_API_KEY`. The API returned 200; a new Shopkeeper WhatsApp Concierge was created. Its metadata is in ignored `.data/wassist-agent.json`. Do not commit keys or raw account responses.
-
-A second GrokBot named Shopkeeper Sales & Recovery Manager is created with saved instructions to work only on this demo, prepare drafts and avoid external sending.
-
-`GET /api/catalogue` exposes customer-safe live stock and prices, with three passing tests covering confidentiality, incoming stock and pause. `scripts/configure-wassist.mjs` verifies that endpoint is publicly accessible before configuring the Wassist concierge's read-only live-stock tool. Existing API tools are preserved.
-
-This first Wassist slice can answer product questions from live stock and link to the sample storefront. It does not yet create reservations directly from WhatsApp, receive inbound webhooks, or send recovery campaigns. Those must not be demonstrated as completed.
-
-## Verified public release — 26 September, 12:40 BST
-The user explicitly approved the public demo after the earlier protection change. The canonical URL is https://shopkeeper-hackathon.vercel.app. Production uses the approved scoped Supabase settings and Tavily key. Vercel Standard Protection now keeps previews and generated deployment URLs protected while the production alias is public. Do not turn All Deployments protection back on without a new user request; it breaks the Wassist catalogue tool.
-
-Wassist agent `d289040e-b827-44f4-98e9-eba4783ebd69` is configured with the active `shopkeeper_live_catalogue` GET tool. API credentials remain local; the catalogue returns only sample product facts and policies. An internal Wassist simulation successfully called the deployed endpoint and replied “1 in stock” and “£68” for the medium washed-black Everyday Hoodie, matching Supabase v13. This verifies agent → public API → database; a physical WhatsApp test remains with the user.
-
-Phone test: https://wa.me/447424845871?text=/connect:d289040e-b827-44f4-98e9-eba4783ebd69. Send the prefilled connect message, then ask about the medium black hoodie. The agent is read-only and links to `/shop` for demo reservations. No WhatsApp contact is written into Alex Morgan’s sample order history.
-
-Production build passed. The latest unit suite has 75 passing tests. Public dashboard verification loaded the real saved GrokBot report and stock ledger. Main frontend files were not changed by this integration slice.
-
-The second internal simulation asked for two hoodies and next-day delivery. Wassist fetched the catalogue again, stated only one was available, declined to claim a WhatsApp reservation and did not promise tomorrow delivery. Both test turns produced successful API tool executions; neither mutated store state.

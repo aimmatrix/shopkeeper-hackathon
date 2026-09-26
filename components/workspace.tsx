@@ -1,20 +1,23 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Action, ShopState } from '@/lib/types';
+import type { Action, ShopState, Purchase } from '@/lib/types';
 import { available } from '@/lib/types';
 import { Mark, type Dash, type View } from './dashboard/shared';
 import { Today } from './dashboard/today';
 import { StockView } from './dashboard/stock';
-import { Restock } from './dashboard/restock';
-import { InboxView } from './dashboard/inbox';
+import { DemoInbox } from './dashboard/demo-inbox';
 
 
 type Connections = { database: string; tavily: boolean; grok: boolean; mode: string };
-const nav: { id: View; label: string }[] = [{ id: 'today', label: 'Today' }, { id: 'inbox', label: 'Inbox' }, { id: 'stock', label: 'Stock' }, { id: 'suppliers', label: 'Suppliers' }];
+const nav: { id: View; label: string }[] = [{ id: 'today', label: 'Dashboard' }, { id: 'inbox', label: 'GrokBot Inbox' }, { id: 'stock', label: 'Stock' }];
 const SEEN_KEY = 'shopkeeper.inbox.seen';
 
 export default function Workspace() {
+  const [demoPurchases, setDemoPurchases] = useState<Purchase[]>([]);
+  const [chatProduct, setChatProduct] = useState<string | null>(null);
+  const [openedChats, setOpenedChats] = useState<string[]>([]);
+  const [demoRun, setDemoRun] = useState(0);
   const [state, setState] = useState<ShopState | null>(null);
   const [connections, setConnections] = useState<Connections | null>(null);
   const [view, setView] = useState<View>('today');
@@ -61,8 +64,9 @@ export default function Workspace() {
     finally { setBusy(false); }
   }
 
+  const displayState = state ? { ...state, purchases: [...state.purchases, ...demoPurchases] } : null;
   const product = state?.products[0];
-  const incoming = state?.purchases.filter(p => ['ordered', 'cancellation_requested'].includes(p.status)).reduce((sum, p) => sum + p.quantity, 0) ?? 0;
+  const incoming = displayState?.purchases.filter(p => p.productId === product?.id && ['ordered', 'cancellation_requested'].includes(p.status)).reduce((sum, p) => sum + p.quantity, 0) ?? 0;
   const paid = state?.orders.filter(o => o.status === 'paid').reduce((sum, o) => sum + o.total, 0) ?? 0;
   const pending = state?.orders.filter(o => o.status === 'reserved') ?? [];
   const quote = state?.quotes.find(q => q.id === selected) ?? state?.quotes[0];
@@ -83,12 +87,10 @@ export default function Workspace() {
     if (view === 'inbox' && lastId && lastId !== seen) { setSeen(lastId); try { localStorage.setItem(SEEN_KEY, lastId); } catch { /* ignore */ } }
   }, [view, lastId, seen]);
 
-  function go(next: View) { setView(next); setMenu(false); window.scrollTo({ top: 0 }); }
+  function startRestock(productId: string) { setMenu(false); setChatProduct(productId); setOpenedChats(ids => ids.includes(productId) ? ids : [...ids, productId]); setView('inbox'); window.scrollTo({ top: 0 }); }
+  function go(next: View) { if ((next === 'inbox' || next === 'suppliers') && product) { startRestock(chatProduct ?? product.id); return; } setView(next); setMenu(false); window.scrollTo({ top: 0 }); }
 
-  async function openSuppliers() {
-    if (state && needRestock && !state.proposalReady && !state.paused) await act({ type: 'prepare_proposal' });
-    go('suppliers');
-  }
+  async function openSuppliers() { if (product) startRestock(product.id); }
   async function approve() {
     if (!state || !quote) return;
     const units = Math.max(quantity, quote.minimum);
@@ -103,11 +105,11 @@ export default function Workspace() {
     await act({ type: 'confirm_cancel', purchaseId: open.id }, `${open.id} cancelled. Nothing is on the way.`);
   }
   async function reset() {
-    if (await act({ type: 'reset' }, 'Sample store reset to its starting point.')) { setResetConfirm(false); setMenu(false); setSelected('north'); setQuantity(20); appliedReport.current = null; go('today'); }
+    if (await act({ type: 'reset' }, 'Sample store reset to its starting point.')) { setDemoPurchases([]); setOpenedChats([]); setChatProduct(null); setDemoRun(n => n + 1); setResetConfirm(false); setMenu(false); setSelected('north'); setQuantity(20); appliedReport.current = null; go('today'); }
   }
 
   const dash: Dash | null = state && product && quote ? {
-    state, product, incoming, paid, pending, needRestock, quote, quantity, busy, go, act, approve, openSuppliers, undo,
+    state: displayState!, product, incoming, paid, pending, needRestock, quote, quantity, busy, go, startRestock, act, approve, openSuppliers, undo,
     pick: id => setSelected(id),
     step: delta => setQuantity(q => Math.min(500, Math.max(5, q + delta))),
     applyReport: () => { if (state.agentReport) { setSelected(state.agentReport.quoteId); setQuantity(state.agentReport.quantity); } },
@@ -146,9 +148,8 @@ export default function Workspace() {
       {error && <div className="sk-alert error" role="alert"><span>{error}</span><button className="sk-text-link" onClick={() => setError('')}>Dismiss</button></div>}
       {!dash ? <p className="sk-loading" role="status">{offline ? 'Couldn’t reach the store. Retrying…' : 'Loading your store…'}</p> : <>
         {view === 'today' && <Today {...dash} />}
-        {view === 'inbox' && <InboxView {...dash} />}
+        {openedChats.map(id => { const item = state?.products.find(p => p.id === id); return item ? <div key={`${demoRun}-${id}`} hidden={view !== 'inbox' || chatProduct !== id}>{<DemoInbox d={dash} product={item} active={view === 'inbox' && chatProduct === id} onOrdered={purchase => setDemoPurchases(current => current.some(p => p.productId === purchase.productId) ? current : [...current, purchase])} />}</div> : null; })}
         {view === 'stock' && <StockView {...dash} />}
-        {view === 'suppliers' && <Restock {...dash} />}
       </>}
     </main>
 

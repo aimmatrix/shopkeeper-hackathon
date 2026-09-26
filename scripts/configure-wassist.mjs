@@ -35,7 +35,7 @@ if (process.env.WASSIST_TOOL_TOKEN) {
       request_headers: { Authorization: { input: { type: 'value', value: `Bearer ${process.env.WASSIST_TOOL_TOKEN}` } } },
       request_body: { type: 'object', required: ['productId', 'quantity', 'consent'], properties: {
         productId: { type: 'string', enum: ['hoodie','tee','bag','cap'], input: { type: 'description', description: 'Exact product ID from the live catalogue matching the customer-requested variant. Ask to clarify mismatching or unspecified variants.' } },
-        quantity: { type: 'integer', minimum: 1, maximum: 10, input: { type: 'description', description: 'The exact number of units the customer explicitly asked to record, between 1 and 10.' } },
+        quantity: { type: 'number', minimum: 1, maximum: 10, input: { type: 'description', description: 'The exact number of units the customer explicitly asked to record, between 1 and 10.' } },
         consent: { type: 'boolean', input: { type: 'description', description: 'True only after the customer explicitly asks or agrees to record this product interest for merchant review. Never infer from browsing or a price question.' } },
       } },
     },
@@ -49,7 +49,11 @@ const config = {
   tools: [...(current.tools || []).filter(t => t.name !== toolName && (!process.env.WASSIST_TOOL_TOKEN || t.name !== requestToolName)).map(({id,name,description,apiSchema,active,creditCost})=>({id,name,description,apiSchema,active,creditCost})), tool, ...requestTools],
 };
 const response = await fetch(`${base}agents/${metadata.id}/`, { method: 'PATCH', headers, body: JSON.stringify(config), signal: AbortSignal.timeout(20000) });
-if (!response.ok) throw new Error(`Could not configure the demo agent (${response.status}).`);
+if (!response.ok) {
+  let detail = await response.text();
+  for (const secret of [apiKey, process.env.WASSIST_TOOL_TOKEN]) if (secret) detail = detail.replaceAll(secret, '[redacted]');
+  throw new Error(`Could not configure the demo agent (${response.status}): ${detail.slice(0, 1600)}`);
+}
 const updated = await response.json();
 await writeFile('.data/wassist-agent.json', JSON.stringify({ id: updated.id, connectUrl: updated.connectUrl, catalogueUrl }), { mode: 0o600 });
 console.log(JSON.stringify({ id: updated.id, name: updated.name, connectUrl: updated.connectUrl, tools: updated.tools.map(t => ({ name: t.name, active: t.active })), catalogueUrl }));
