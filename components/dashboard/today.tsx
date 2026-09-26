@@ -21,6 +21,10 @@ export function Today(d: Dash) {
   const received = [...state.purchases].reverse().find(p => p.productId === product.id && p.status === 'received');
   const mode: 'pending' | 'ordered' | 'clear' = incoming > 0 ? 'ordered' : needRestock ? 'pending' : 'clear';
   const units = Math.max(d.quantity, quote.minimum);
+  // The stock agent's recommendation (saved by GrokBot) is the default pick; the merchant can still change it.
+  const report = state.agentReport;
+  const reportQuote = report && state.quotes.find(q => q.id === report.quoteId);
+  const followsReport = Boolean(report && report.quoteId === quote.id && report.quantity === units);
   const others = state.products.filter(p => p.id !== product.id);
   const othersLow = others.filter(isLow).length;
   const supplierOf = (id: string) => state.quotes.find(q => q.id === id)?.supplier ?? 'your supplier';
@@ -59,7 +63,8 @@ export function Today(d: Dash) {
           <UnitRow title="On the shelf" sub={`${product.reserved} reserved · ${free} free`} count={Math.max(0, product.onHand)}>
             <Blocks kind="reserved" count={product.reserved} /><Blocks kind="free" count={free} />
           </UnitRow>
-          <UnitRow title="Customers waiting" sub={product.demand ? 'Asked, nothing to sell' : 'No one waiting'} count={product.demand} tone={product.demand ? 'waiting' : undefined}>
+          <UnitRow title="Customers waiting" sub={product.demand ? 'Asked, nothing to sell' : 'No one waiting'} count={product.demand} tone={product.demand ? 'waiting' : undefined}
+            extra={product.demand > 0 && <button className="sk-link-button" onClick={() => d.go('inbox')}>See the customer chat</button>}>
             <Blocks kind="waiting" count={product.demand} />
           </UnitRow>
           {open && <UnitRow title="On the way" sub={`Arrives ${shortDate(arrival(d, open))}`} count={incoming} tone="incoming"
@@ -81,7 +86,7 @@ export function Today(d: Dash) {
 
       <aside className="sk-suggest">
         {mode === 'pending' && <div className="sk-suggest-body">
-          <span className="sk-kicker ink">SUGGESTED RESTOCK</span>
+          <span className="sk-kicker ink">{followsReport ? 'GROKBOT’S PICK' : report ? 'YOUR PICK' : 'SUGGESTED RESTOCK'}</span>
           <div className="sk-suggest-what">{units} {unitName(product, units)} from {quote.supplier}</div>
           <div className="sk-suggest-total">{money(units * quote.unitCost + quote.shipping)}</div>
           <div className="sk-suggest-facts">
@@ -89,6 +94,9 @@ export function Today(d: Dash) {
             <span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>Covers about {Math.floor((free + units) / Math.max(1, product.dailySales))} days of sales</span>
             <span><Tick size={18} width={2} />{quote.recommended ? `Your usual supplier, ${quote.country.split(',')[0]}` : `Ships from ${quote.country}`}</span>
           </div>
+          {report && (followsReport
+            ? <details className="sk-why"><summary>Why GrokBot picked this</summary><p>{report.rationale}</p><small>{report.source === 'agent_token' ? 'Sent by GrokBot over its verified agent connection' : 'Saved through the GrokBot handoff page (/agent)'} at {clock(report.at)}.</small></details>
+            : reportQuote && <button className="sk-why-reset" onClick={d.applyReport}>Use GrokBot’s pick: {report.quantity} from {reportQuote.supplier}</button>)}
           <div className="sk-grow" />
           <button className="sk-btn ink big" disabled={d.busy || state.paused} onClick={d.approve}>Approve restock<Arrow /></button>
           <button className="sk-btn outline" disabled={d.busy} onClick={d.openSuppliers}>Compare {state.quotes.length} suppliers</button>

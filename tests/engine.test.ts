@@ -55,3 +55,13 @@ test('unknown variants do not create wrong orders', () => {
   assert.equal(s.orders.filter(o => o.customer === 'Alex Morgan').length, 0);
   assert.equal(s.products[0].reserved, 7);
 });
+
+test('reset rewinds the shop but keeps the stock agent recommendation', () => {
+  let state = transition(seed(), { type: 'agent_report', summary: 'Restock 20 from North Thread.', rationale: 'Lowest landed cost within budget.', quoteId: 'north', quantity: 20, eventId: 'report-1', source: 'handoff_page' });
+  state = transition(state, { type: 'customer_message', text: 'Can I get two medium black hoodies?', eventId: 'customer-1' });
+  const reset = transition(state, { type: 'reset' });
+  assert.equal(reset.products[0].demand, seed().products[0].demand);
+  assert.equal(reset.orders.some(o => o.customer === 'Alex Morgan'), false);
+  assert.deepEqual(reset.agentReport, state.agentReport);
+  assert.equal(transition(seed(), { type: 'reset' }).agentReport, undefined);
+});

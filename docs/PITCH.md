@@ -24,11 +24,11 @@ Shopkeeper turns a customer hoodie request into a live stock reservation, an hon
 
 **0:20 — The store.** North & Form is a fictional premium clothing shop. Shopkeeper is the merchant workspace behind it. This is a guided demo with real persisted records, not a slideshow.
 
-**0:35 — The story we will click.** A customer asks for two medium washed-black Everyday Hoodies. One unit can be sold, so it is reserved immediately. The second unit is unmet demand, not a fake sale. That shortage feeds a restock proposal. The merchant compares sample suppliers on the phone, approves a demo purchase order, and the order is recorded. Incoming stock still does not count as available.
+**0:35 — The story we will click.** A customer asks for two medium washed-black Everyday Hoodies. One unit can be sold, so it is reserved immediately. The second unit is unmet demand, not a fake sale. That shortage feeds the restock. GrokBot, our stock agent, has already compared the sample suppliers and picked one, with its reasoning on screen. The merchant approves it in one click, and the order is recorded. Incoming stock still does not count as available.
 
 **0:55 — Demo (see `docs/DEMO_SCRIPT.md`).** Speak over the clicks; do not narrate every label. Point at three facts as they appear: **available vs reserved**, **unmet demand**, **incoming ≠ on hand**.
 
-**2:20 — What is actually live.** Catalogue, Alex Morgan, and the three supplier quotes are sample data. Inventory, reservations, purchase orders and activity are persisted — to Supabase when it is connected, otherwise a local demo file in development. Inbox replies are a deterministic parser for this hoodie workflow, labelled as a demo workflow. Checkout and supplier orders write records only; no card is charged and no factory is emailed. Instagram is **not connected**. Tavily supplier search is optional evidence and never overwrites the sample quotes. The real GrokBot Stock Manager used `/agent` to save its recommendation: 20 hoodies for £452. Wassist now reads this same store’s live catalogue; a tested query returned 1 hoodie at £68. WhatsApp reservation writes and automated recovery are not implemented.
+**2:20 — What is actually live.** Catalogue, Alex Morgan, and the three supplier quotes are sample data. Inventory, reservations, purchase orders and activity are persisted — to Supabase when it is connected, otherwise a local demo file in development. Inbox replies are a deterministic parser for this hoodie workflow, labelled as a demo workflow. Checkout and supplier orders write records only; no card is charged and no factory is emailed. Instagram is **not connected**. Tavily supplier search is optional evidence and never overwrites the sample quotes. The real GrokBot Stock Manager used `/agent` to save its recommendation: 20 hoodies for £452. Wassist now reads this same store’s live catalogue; a tested query returned 1 hoodie at £68. With permission, Wassist records product interest in the shared store. The second GrokBot saves recovery drafts for merchant review. WhatsApp reservations and outbound recovery sending are not implemented.
 
 **2:40 — Close.** Shopkeeper does not run the shop by itself. It puts the request, the shortage and the restock on the same record, so the only thing left is an explicit yes. That is how a small merchant stays in stock without pretending the software already spent the money.
 
@@ -44,8 +44,8 @@ Shopkeeper turns a customer hoodie request into a live stock reservation, an hon
 | Reservations, POs, activity | Real rows in the live store state |
 | **Complete demo checkout** / **Confirm demo restock** | Simulated payment / simulated supplier order |
 | Tavily **Research suppliers** | Live web search only if `TAVILY_API_KEY` is set; discovery, not an offer |
-| GrokBot | Stock Manager browser handoff verified; Sales & Recovery Manager created/scoped only; no autonomous purchasing |
-| Wassist | Live catalogue API tool verified in internal simulation; user phone test pending; read-only |
+| GrokBot | Stock Manager browser handoff verified; Sales & Recovery Manager browser draft handoff implemented; no autonomous purchasing |
+| Wassist | Catalogue and authenticated interest-recording tools verified in internal simulation; physical phone test pending; no reservation/payment tool |
 | Instagram | Status **Not connected** |
 
 Supported purchase path today: **medium washed-black Everyday Hoodie**. Do not imply arbitrary-product checkout.

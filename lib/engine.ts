@@ -48,7 +48,8 @@ export function transition(original: ShopState, action: Action): ShopState {
   }
   if (action.type === 'customer_message' && typeof action.text !== 'string') throw new Error('Write a message between 1 and 2,000 characters.');
   if (action.type === 'agent_report' && (typeof action.summary !== 'string' || typeof action.rationale !== 'string')) throw new Error('Provide a concise summary and evidence-based rationale.');
-  if (action.type === 'reset') return { ...seed(), processedEvents: [...original.processedEvents], eventFingerprints: { ...original.eventFingerprints }, version: original.version + 1 };
+  // A reset rewinds the shop, not the agent's work: the GrokBot recommendation was written against the seed, so it survives.
+  if (action.type === 'reset') return { ...seed(), ...(original.agentReport && { agentReport: structuredClone(original.agentReport) }), processedEvents: [...original.processedEvents], eventFingerprints: { ...original.eventFingerprints }, version: original.version + 1 };
   const state = structuredClone(original);
   const fingerprint = createHash('sha256').update(JSON.stringify(Object.fromEntries(Object.entries(action).sort(([a], [b]) => a.localeCompare(b))))).digest('hex');
   if ('eventId' in action) {

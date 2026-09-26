@@ -171,6 +171,10 @@ body:has(.sk){background:#F6F1E7}
 .sk-suggest-big{font-size:40px;font-weight:800;line-height:1.05;letter-spacing:-.03em}
 .sk-suggest-line{font-size:15px;font-weight:600}
 .sk-suggest-copy{font-size:14px;font-weight:500;line-height:1.55}
+.sk-why summary{cursor:pointer;font-size:13px;font-weight:800;text-decoration:underline;text-underline-offset:3px}
+.sk-why p{margin:10px 0 0;padding:14px 16px;background:rgba(255,255,255,.6);border-radius:8px;font-size:13px;font-weight:500;line-height:1.55;white-space:pre-line;max-height:240px;overflow:auto}
+.sk-why small{display:block;margin-top:8px;font-size:11px;font-weight:600;opacity:.75}
+.sk-why-reset{align-self:flex-start;background:none;border:0;padding:0;text-align:left;font-size:13px;font-weight:800;text-decoration:underline;text-underline-offset:3px}
 .sk-tick-box{width:52px;height:52px;border-radius:4px;background:var(--sk-ink);color:var(--sk-accent);display:flex;align-items:center;justify-content:center}
 .sk-tick-box.accent{width:64px;height:64px;background:var(--sk-accent);color:var(--sk-ink)}
 .sk-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}

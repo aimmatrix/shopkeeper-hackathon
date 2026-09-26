@@ -262,7 +262,7 @@ export default function MobileDecision() {
       <section className={`${styles.card} ${styles.agent}`} aria-labelledby="agent-title">
         <div className={styles.agentHead}><span className={styles.agentIcon}><Bot size={20} aria-hidden /></span>
           <div><h2 id="agent-title" className={styles.cardTitle}>Agent recommendation</h2>
-            <p className={styles.kicker}>{report ? `${report.source === 'agent_token' ? 'GROKBOT STOCK MANAGER' : 'HANDOFF PAGE'} · ${clock(report.at)}` : connections?.grok ? 'GROKBOT ENDPOINT READY' : 'GROKBOT STOCK MANAGER NOT CONNECTED'}</p></div>
+            <p className={styles.kicker}>{report ? `${report.source === 'agent_token' ? 'GROKBOT STOCK MANAGER' : 'GROKBOT HANDOFF PAGE'} · ${clock(report.at)}` : connections?.grok ? 'GROKBOT ENDPOINT READY' : 'GROKBOT STOCK MANAGER NOT CONNECTED'}</p></div>
         </div>
         {report ? <>
           <p className={styles.agentSummary}>{report.summary}</p>

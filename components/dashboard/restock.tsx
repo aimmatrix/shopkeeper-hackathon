@@ -45,7 +45,7 @@ export function Restock(d: Dash) {
     </section> : <>
       {report && <section className="sk-report">
         <div>
-          <span className="sk-kicker">STOCK MANAGER’S RECOMMENDATION · {report.source === 'agent_token' ? 'VIA GROKBOT' : 'VIA HANDOFF PAGE'}</span>
+          <span className="sk-kicker">STOCK MANAGER’S RECOMMENDATION · {report.source === 'agent_token' ? 'VIA GROKBOT' : 'VIA THE GROKBOT HANDOFF PAGE'}</span>
           <p>{report.summary}</p>
           <details><summary>See the reasoning</summary><p>{report.rationale}</p></details>
         </div>

@@ -133,7 +133,7 @@ export default function Workspace() {
         {menu && <div className="sk-menu" role="menu">
           {state && <button role="menuitem" disabled={busy} onClick={async () => { await act({ type: 'toggle_pause' }, state.paused ? 'Workflow resumed.' : 'Workflow paused. Customer replies and restocks are on hold.'); setMenu(false); }}>{state.paused ? 'Resume workflow' : 'Pause workflow'}</button>}
           {resetConfirm ? <div className="sk-menu-confirm">
-            <span>Reset the sample store to its starting point?</span>
+            <span>Reset the sample store to its starting point? GrokBot’s pick is kept.</span>
             <div><button className="sk-btn ink sm" disabled={busy} onClick={reset}>Reset</button><button className="sk-btn outline sm" onClick={() => setResetConfirm(false)}>Keep data</button></div>
           </div> : <button role="menuitem" onClick={() => setResetConfirm(true)}>Reset demo store…</button>}
           {connections && <p className="sk-menu-note">Saved to {connections.database === 'supabase' ? 'Supabase' : 'a local file'} · Supplier search {connections.tavily ? 'on' : 'off'}</p>}
