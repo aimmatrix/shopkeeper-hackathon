@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { recoveryView } from '@/lib/commerce/recovery';
-import { createRateLimiter } from '@/lib/agents/sales';
+import { createRateLimiter } from '@/lib/rate-limit';
 import { identifyCaller, clientKey } from '@/lib/store-access';
 import { mutate, readState } from '@/lib/store';
 export const dynamic = 'force-dynamic';

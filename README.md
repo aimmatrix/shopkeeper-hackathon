@@ -22,7 +22,6 @@ With blank connection variables, local development uses a sample JSON store unde
 - `/agent` — GrokBot browser handoff: inspect records and save a recommendation
 - `/api/store` — sample state and commerce actions
 - `/api/research` — Tavily supplier evidence, requiring `TAVILY_API_KEY`
-- `/api/assist` — optional xAI sales assistant, requiring `XAI_API_KEY`
 - `/api/export?type=inventory` — CSV exports; also `orders`, `purchases`, `activity`
 
 ## Verification
@@ -40,7 +39,7 @@ While several agents share this checkout, only the primary agent runs builds or 
 
 Reservations reduce available inventory immediately without changing on-hand units. Explicit merchant approval records an incoming purchase including shipping and respecting minimum order quantities. Cancellation remains pending until supplier confirmation is simulated; delivery adds stock exactly once. Demo checkout records a sample sale and releases its reservation. Customer interest is separate from paid sales.
 
-Supplier quotes, customer history, purchases and payments are simulated. Supabase persistence and configured Tavily searches are live. GrokBot uses the browser handoff to submit a recommendation; an xAI API assistant is a separate optional integration. No Instagram account, supplier messaging or real payment processor is connected.
+Supplier quotes, customer history, purchases and payments are simulated. Supabase persistence and configured Tavily searches are live. GrokBot uses the browser handoff pages (`/agent`, `/recovery`) to save recommendations and drafts; it never approves a purchase. No Instagram account, supplier messaging or real payment processor is connected.
 
 The hosted app is a shared fictional demo, not a production multitenant merchant service. Origin checks protect browser request boundaries, not user identity. A real deployment would additionally require merchant sessions, customer ownership checks, durable rate limits and tenant isolation.
 

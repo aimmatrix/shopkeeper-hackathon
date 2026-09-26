@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { seed, transition } from '../lib/engine';
 import { Action, ShopState, available } from '../lib/types';
-import { createRateLimiter } from '../lib/agents/sales';
+import { createRateLimiter } from '../lib/rate-limit';
 import { authorizeAction, identifyCaller } from '../lib/store-access';
 
 

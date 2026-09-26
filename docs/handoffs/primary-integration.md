@@ -28,7 +28,7 @@ The user is redesigning the main frontend. That agent owns the dashboard, produc
 4. Preserve `state.agentReport` display and its supplier/quantity selection in the approval flow. The `/agent` page saves recommendations only. A report submitted through this browser handoff does not cryptographically prove which person or agent filled it in; do not present it as an authenticated GrokBot API event.
 5. Preserve actual incoming/on-hand/reserved distinctions. A purchase approval adds incoming stock only.
 6. Read `docs/handoffs/cursor-3.md`: fix 320px hero overlap, dialog focus containment, small text/contrast and inventory action visibility while redesigning.
-7. The xAI assistant endpoint is implemented and tested with mocks, but requires `XAI_API_KEY` for live use. It is distinct from GrokBot. Do not relabel the guided customer chat as live AI unless actually integrated and verified. See Claude 1's contract.
+7. The unused xAI assistant endpoint (`/api/assist`) was deleted on 2026-09-26; its rate limiter now lives in `lib/rate-limit.ts`. The guided customer chat is not live AI; do not relabel it.
 8. `proposalReady` now becomes false on approval. After receiving/cancelling, prepare a new proposal before approving another purchase.
 
 ## Deployment
@@ -55,3 +55,16 @@ The report was also verified visibly in both the merchant Overview and `/mobile`
 Latest verified preview build: https://shopkeeper-hackathon-fmzj6vt1f-muhammads-projects-6598a55c.vercel.app (2026-09-26). Vercel build, type checking, all routes passed. Sign-in or a temporary share link is required. The GrokBot handoff used an earlier preview against the same Supabase store, so its report is visible in this deployment too.
 
 Hosted Tavily verification completed on preview fmzj6vt1f. The CLI verification attempt timed out in automatic approval review; verification was completed through the supported browser UI using a temporary Vercel share link. No additional approval is pending for this integration.
+
+## Recovery slice (primary Codex, current work)
+Added `/recovery`, `/api/recovery`, `/api/wassist/requests`, `lib/commerce/recovery.ts` and `lib/commerce/wassist.ts`. Shared types/engine now support separate stock requests and saved recovery drafts. The generic store API rejects these new actions; their dedicated routes assign channel/provenance. No customer transcript, phone number or Wassist ID is stored—only a keyed contact reference. Repeated contact/product requests are idempotent and do not increase shortage twice. Draft review checks live availability and rejects stale drafts. No outbound sends or reservations occur through this tool.
+
+83 tests and typecheck passed. Production build `dpl_86WAj884NTvYsjFJH5dx2DSFgx5S` passed. Generated `WASSIST_TOOL_TOKEN` is configured server-only for this endpoint and the corresponding Wassist API tool. Never expose it to the frontend or reuse the Supabase workspace key for tool authentication.
+
+**Frontend agent:** please add a prominent link to `/recovery` in the redesigned merchant workspace. Primary Codex has not modified your main frontend files. Preserve the existing `/agent`, `/mobile`, `/shop` routes. The new recovery page has its own scoped CSS.
+
+
+### Recovery release verified (26 September, 13:05 BST)
+Latest production `dpl_Bud28y6V2nCTeFmD6enSGs7tWuEY`, public alias unchanged. Build passed. Wassist internal simulation successfully recorded request `7546f60725349ba3f3516952`, which appeared in `/recovery`. An unauthenticated POST returned 401. GrokBot Sales & Recovery Manager opened the page, saved a draft, then corrected an invented sample customer name after review. The final persisted draft begins “Hi there” and explains no identity is known. This verifies both GrokBots' separate browser handoffs. No messages were sent, stock reserved, or purchases approved during this recovery slice. A separate clearly labelled sample request `059aa66b…` also remains for rehearsal.
+
+The endpoint and managed agent are connected; physical WhatsApp testing is still awaiting the user's confirmation. No automatic bot-to-bot trigger or outbound recovery sending is implemented.

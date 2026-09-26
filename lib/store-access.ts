@@ -1,5 +1,5 @@
 import { timingSafeEqual } from 'node:crypto';
-import { createRateLimiter, type RateLimiter } from './agents/sales';
+import { createRateLimiter, type RateLimiter } from './rate-limit';
 import type { Action } from './types';
 
 // A matching Origin is CSRF protection, not authentication: the demo workspace is public and login-free, so a

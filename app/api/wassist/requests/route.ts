@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateWassist, stockRequestAction, WassistRequestError } from '@/lib/commerce/wassist';
-import { createRateLimiter } from '@/lib/agents/sales';
+import { createRateLimiter } from '@/lib/rate-limit';
 import { mutate } from '@/lib/store';
 import { available } from '@/lib/types';
 export const dynamic = 'force-dynamic';
